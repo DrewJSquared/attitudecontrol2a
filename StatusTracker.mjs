@@ -13,13 +13,12 @@ import os from 'os';
 import eventHub from './EventHub.mjs';
 
 import Logger from './Logger.mjs';
-const logger = new Logger('NetworkModule.mjs');
+const logger = new Logger('StatusTracker.mjs');
 
 
 
 // variables
-const MIN_SAMPLE_INTERVAL = 1000;  // minimum interval to check status
-const MAX_SAMPLE_INTERVAL = 5000;  // maximium interval before am update will be sent anyway
+const SAMPLE_INTERVAL = 5000;  // interval for how often to check system status
 
 
 
@@ -29,12 +28,7 @@ class StatusTracker {
     // constructor
     constructor() {
         // minimum and maximum interval to send a status update
-        this.minSampleInterval = MIN_SAMPLE_INTERVAL;
-        this.maxSampleInterval = MAX_SAMPLE_INTERVAL;
-
-        // hold the last status
-        this.lastStatus = null;
-        this.lastStatusTimestamp = null;
+        this.sampleInterval = SAMPLE_INTERVAL;
 
         // start the interval for status sampling
         this.startSampling();
@@ -46,53 +40,83 @@ class StatusTracker {
         setInterval(() => {
             // process system status
             this.processSystemStatus();
-        }, this.minSampleInterval);
+        }, this.sampleInterval);
     }
 
 
     // process system status
     processSystemStatus() {
-        const currentStatusMetrics = this.getSystemStatus();
+        // wrap the system status processing in a try catch, in case there's errors with os
+        try {
+            logger.info(`Processing current system status at ${ new Date().toLocaleTimeString() }`);
 
-        // if the current status metrics are the same as previously AND it's been less than this.maxSampleInterval ms since last update
-        // then just return true because system is unchanged
-        if (JSON.stringify(currentStatusMetrics) === this.lastStatus 
-            && (Date.now() - this.lastStatusTimestamp) > this.maxSampleInterval) {
+            // create an object with the current system status in it
+            const currentSystemStatus = {
+                timestamp: new Date(),
+                
+                platform: os.platform(),
+                architecture: os.arch(),
+                hostname: os.hostname(),
 
-            console.log('System unchanged'); // TEMP
-            return;
+                cpuCount: os.cpus().length,
+                cpuUsage: os.loadavg(),
+
+                totalMemory: this.formatBytes(os.totalmem()),
+                freeMemory: this.formatBytes(os.freemem()),
+                usedMemory: this.formatBytes(os.totalmem() - os.freemem()),
+
+                uptime: this.formatTime(os.uptime()),
+
+                diskUsage: 'unknown',
+
+                networkInterfaces: os.networkInterfaces(),
+            };
+
+            // TEMP log the current system status object
+            // console.log('currentSystemStatus', currentSystemStatus);
+
+            // emit an event that the current system status has been processed
+            eventHub.emit('systemStatusUpdate', currentSystemStatus);
+        } catch (error) {
+            logger.error(`Error processing system status: ${error}`);
         }
-
-        // update last status to current & update timestamp
-        this.lastStatus = JSON.stringify(currentStatusMetrics);
-        this.lastStatusTimestamp = Date.now();
-
-        console.log('system has changed!');
-
     }
 
 
-    // get system status data
-    getSystemStatus() {
-        const statusMetrics = {
-            cpuUsage: os.loadavg()[0], // Get CPU usage
-            memoryUsage: os.totalmem() - os.freemem(), // Get memory usage
-            diskUsage: "TODO", // Get disk usage (you can implement this)
-            cpuTemp: "TODO", // Get CPU temperature (you can implement this)
-            networkStatus: "TODO" // Get network status (you can implement this)
-        };
+    // helper function to return a usable number of bytes
+    formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
 
-        console.log('statusMetrics', statusMetrics);
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 
-        return statusMetrics;
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     }
 
 
-    // Emit status update event to the eventHub
-    // emitStatusUpdate(status) {
-    //     this.lastStatus = status; // Update last status
-    //     eventHub.emit('statusUpdate', status); // Emit status update event
-    // }
+    // helper function to format time
+    formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+
+        if (hours >= 24) {
+            const days = Math.floor(hours / 24);
+            const formattedDays = String(days).padStart(2, '0');
+            const formattedHours = String(hours % 24).padStart(2, '0');
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+            return `${formattedDays}d ${formattedHours}h ${formattedMinutes}m ${formattedSeconds}s`;
+        } else {
+            const formattedHours = String(hours).padStart(2, '0');
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+            return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+        }
+    }
 }
 
 

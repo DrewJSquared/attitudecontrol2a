@@ -24,7 +24,7 @@ const logger = new Logger('NetworkModule.mjs');
 
 // variables
 const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
-const PING_INTERVAL = 5000;  // interval in ms to ping the server
+const PING_INTERVAL = 1000;  // interval in ms to ping the server
 
 
 
@@ -65,7 +65,7 @@ class NetworkModule {
 
         // bind event listeners for logging and status updates
         eventHub.on('log', this.logListener.bind(this));
-        // eventHub.on('statusUpdate', this.statusUpdateListener.bind(this));
+        eventHub.on('systemStatusUpdate', this.systemStatusUpdateListener.bind(this));
 
     	// log the initialization
     	logger.info('Network module initialization complete!');
@@ -171,6 +171,12 @@ class NetworkModule {
     // it then grabs that log and adds it to the queue
     logListener(log) {
         this.enqueueData('log', log);
+    }
+
+
+    // systemStatusUpdateListener for systemStatus updated events
+    systemStatusUpdateListener(currentSystemStatus) {
+    	this.enqueueData('systemStatus', currentSystemStatus);
     }
 }
 
