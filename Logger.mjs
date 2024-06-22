@@ -5,6 +5,7 @@
 
 // import modules
 import npmlog from 'npmlog';
+import eventHub from './eventHub.mjs';
 
 
 // variables & options
@@ -144,7 +145,8 @@ class Logger {
 		}
 
 
-		// TODO here - send log to network module
+		// emit 'log' event to the eventHub, which can then be picked up by the network module to send to server
+		eventHub.emit('log', logEntry);
 	}
 
 
@@ -166,4 +168,4 @@ class Logger {
 
 
 // export the Logger class
-export { Logger };
+export default Logger;

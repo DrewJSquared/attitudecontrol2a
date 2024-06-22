@@ -1,6 +1,7 @@
 {
   "type": "module",
   "dependencies": {
+    "node-fetch": "^3.3.2",
     "npmlog": "^7.0.1"
   }
 }
