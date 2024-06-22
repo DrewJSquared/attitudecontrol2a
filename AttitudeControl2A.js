@@ -14,14 +14,56 @@
 
 // ==================== IMPORT ====================
 import Logger from './Logger.mjs';
-const logger = new Logger('AttitudeControl2A.js');
+const logger = new Logger('AttitudeControl2A');
 
 import eventHub from './EventHub.mjs';
 import networkModule from './NetworkModule.mjs';
-
-
-
 import statusTracker from './StatusTracker.mjs';
+import configManager from './ConfigManager.mjs';
+
+
+
+
+
+
+
+
+
+
+
+setTimeout(() => {
+	console.log('TIMEOUT ACTIVATED!');
+
+	logger.info('READING part of the device configuration...');
+
+	console.log(configManager.config.devicemeta.timezone);
+
+
+}, 4000);
+
+
+
+setTimeout(() => {
+	console.log('TIMEOUT ACTIVATED!');
+
+	logger.info('Updating part of the device configuration...');
+
+	configManager.update({
+		devicemeta: {
+			timezone: 'America/Los_Angeles',
+			port1: 4,
+			port2: 3,
+			port3: 2,
+			port4: 1,
+		}
+	})
+
+
+}, 2000);
+
+
+
+
 
 
 // logger.log('info', 'Initial test of the logger app!');
@@ -36,17 +78,17 @@ import statusTracker from './StatusTracker.mjs';
 // logger.log('info', 'Initial test of the logger app!');
 
 
-setTimeout(() => {
-	console.log('TIMEOUT ACTIVATED!');
+// setTimeout(() => {
+// 	console.log('TIMEOUT ACTIVATED!');
 
 
-	logger.info('Info log activated from timeout in main app.');
+// 	logger.info('Info log activated from timeout in main app.');
 
-	logger.error('Uh oh, an error occured! Something went wrong.');
+// 	logger.error('Uh oh, an error occured! Something went wrong.');
 
 
 
-}, 500);
+// }, 500);
 
 
 

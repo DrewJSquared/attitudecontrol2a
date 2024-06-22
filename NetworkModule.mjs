@@ -13,12 +13,9 @@ import eventHub from './EventHub.mjs';
 import fetch from 'node-fetch';
 
 import Logger from './Logger.mjs';
-const logger = new Logger('NetworkModule.mjs');
+const logger = new Logger('NetworkModule');
 
-
-// *** havent created these modules yet
-// import { configManager } from './ConfigManager.mjs';
-// import { deviceManager } from './DeviceManager.mjs';
+import configManager from './ConfigManager.mjs';
 
 
 
@@ -109,14 +106,15 @@ class NetworkModule {
 		        throw new Error(`Request failed with status ${response.status}`);
 		    }
 
-		    // Parse the JSON response body and return it
-		    return response.json();
+			// log a success message
+    		logger.info(`${response.status} ${response.statusText} request successful! Connected to attitude.lighting server!`);
+
+		    // return the body text of the response
+		    return response.text();
 		})
 
 		// then handle the data from the response
 		.then(data => {
-			// log a success message
-    		logger.info(`Network request was successful! Connected to attitude.lighting server!`);
 
     		// handle the response data
     		this.handleResponse(data);
@@ -130,7 +128,7 @@ class NetworkModule {
 		// and catch any errors that occur
 		.catch(error => {
 			// log error to logger, which will show in console and queue log to be sent to server
-    		logger.error(`Error during network request or response handling: ${error.message}`);
+    		logger.error(`Error during network request: ${error.message}`);
 
     		// since there was an error of some sort, these messages should be added back to the queue and re-sent to server
     		// unshift the queue by adding this payload (which failed) to the front
@@ -140,18 +138,24 @@ class NetworkModule {
 
 
     // Handle the response data from the server
-    handleResponse(data) {
-    	console.log('Received response from server:', data.message);
+    handleResponse(rawData) {
+    	// wrap this logic in a try/catch, so that errors here will be caught instead of causing us to resend data in the fetch function
+    	try {
+    		// actually process the response data from the server here
+    		logger.info('Processing response data from server...');
 
-        // // Update the device configuration if provided in the response
-        // if (data.configUpdate) {
-        //     configManager.updateConfig(data.configUpdate);
-        // }
+    		// JSON parse the raw data from the server
+    		let data = JSON.parse(rawData);
 
-        // // Update the device status if provided in the response
-        // if (data.deviceStatus) {
-        //     deviceManager.updateStatus(data.deviceStatus);
-        // }
+    		// update the config manager with the new data
+    		configManager.update(data);
+
+    		// log success
+    		logger.info('Successfully processed response data from server!');
+    	} catch (error) {
+			// log error to logger, which will show in console and queue log to be sent to server
+    		logger.error(`Error during response handling: ${error.message}`);
+    	}
     }
 
 

@@ -13,7 +13,7 @@ import os from 'os';
 import eventHub from './EventHub.mjs';
 
 import Logger from './Logger.mjs';
-const logger = new Logger('StatusTracker.mjs');
+const logger = new Logger('StatusTracker');
 
 
 

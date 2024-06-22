@@ -1,0 +1,1676 @@
+{
+    "devicemeta": {
+        "timezone": "America/Chicago",
+        "port1": 1,
+        "port2": 2,
+        "port3": 3,
+        "port4": 4,
+        "port5": 5,
+        "port6": 6,
+        "port7": 7,
+        "port8": 8,
+        "reboot": 0,
+        "update": 0
+    },
+    "patch": {
+        "zonesList": [
+            {
+                "name": "Double Wide",
+                "color": "blue",
+                "groups": [
+                    "Group 1",
+                    "Group 2",
+                    "Group 3",
+                    "Group 4"
+                ]
+            },
+            {
+                "name": "Zone 2",
+                "color": "fuchsia",
+                "groups": []
+            },
+            {
+                "name": "Zone 3",
+                "color": "emerald",
+                "groups": []
+            },
+            {
+                "name": "Zone 4",
+                "color": "yellow",
+                "groups": [
+                    "1",
+                    "2",
+                    "3 asdf",
+                    "Last"
+                ]
+            }
+        ],
+        "fixturesList": [
+            {
+                "id": 1,
+                "type": 6,
+                "label": "DBLWD Group 1",
+                "universe": 1,
+                "startAddress": 1,
+                "zoneNumber": 1,
+                "groupNumber": 1,
+                "quantity": 20,
+                "highlight": false
+            },
+            {
+                "id": 9,
+                "type": 6,
+                "label": "DBLWD Group 2",
+                "universe": 1,
+                "startAddress": 81,
+                "zoneNumber": 1,
+                "groupNumber": 2,
+                "quantity": 20,
+                "highlight": false
+            },
+            {
+                "id": 10,
+                "type": 6,
+                "label": "DBLWD Group 3",
+                "universe": 1,
+                "startAddress": 161,
+                "zoneNumber": "1",
+                "groupNumber": "3",
+                "quantity": 20,
+                "highlight": false
+            },
+            {
+                "id": 11,
+                "type": 6,
+                "label": "DBLWD Group 4",
+                "universe": 1,
+                "startAddress": 241,
+                "zoneNumber": "1",
+                "groupNumber": "4",
+                "quantity": 20,
+                "highlight": false
+            },
+            {
+                "id": 2,
+                "type": 6,
+                "label": "Double Wide Tape",
+                "universe": 2,
+                "startAddress": 1,
+                "zoneNumber": 4,
+                "groupNumber": 1,
+                "quantity": 15,
+                "highlight": false
+            },
+            {
+                "id": 5,
+                "type": 4,
+                "label": "Mag",
+                "universe": 2,
+                "startAddress": 61,
+                "zoneNumber": 4,
+                "groupNumber": 2,
+                "highlight": false
+            },
+            {
+                "id": 6,
+                "type": 6,
+                "label": "Last",
+                "universe": 2,
+                "startAddress": 149,
+                "zoneNumber": 4,
+                "groupNumber": 3,
+                "quantity": 30
+            },
+            {
+                "id": 7,
+                "type": 6,
+                "label": "Last",
+                "universe": 2,
+                "startAddress": 269,
+                "zoneNumber": 4,
+                "groupNumber": 4,
+                "quantity": 15
+            },
+            {
+                "id": 3,
+                "type": 6,
+                "label": "Double Wide Tape",
+                "universe": 3,
+                "startAddress": 1,
+                "zoneNumber": 3,
+                "groupNumber": 0,
+                "quantity": 82
+            },
+            {
+                "id": 4,
+                "type": 6,
+                "label": "Double Wide Tape",
+                "universe": 5,
+                "startAddress": 1,
+                "zoneNumber": 2,
+                "groupNumber": 0,
+                "quantity": 82
+            },
+            {
+                "id": 8,
+                "type": 6,
+                "label": "rope",
+                "universe": 5,
+                "startAddress": 329,
+                "zoneNumber": 4,
+                "groupNumber": 4,
+                "quantity": 20
+            }
+        ]
+    },
+    "shows": [
+        {
+            "id": 1,
+            "type": 5,
+            "direction": 2,
+            "speed": 31,
+            "size": 8,
+            "pause": 50,
+            "splits": 1,
+            "colorsList": [
+                [
+                    0,
+                    75,
+                    107
+                ],
+                [
+                    82,
+                    0,
+                    39
+                ],
+                [
+                    102,
+                    17,
+                    0
+                ],
+                [
+                    0,
+                    97,
+                    6
+                ]
+            ],
+            "name": "RND SHOW 1"
+        },
+        {
+            "id": 2,
+            "type": 4,
+            "direction": 0,
+            "speed": 33,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    255,
+                    255,
+                    255
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "Red White Blue SHOW 2"
+        },
+        {
+            "id": 9,
+            "type": 6,
+            "direction": 0,
+            "speed": 50,
+            "size": 8,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "Rainbow Wave Works"
+        },
+        {
+            "id": 13,
+            "type": 6,
+            "direction": 1,
+            "speed": 39,
+            "size": 15,
+            "pause": 0,
+            "splits": 2,
+            "colorsList": [
+                [
+                    255,
+                    123,
+                    0
+                ],
+                [
+                    0,
+                    135,
+                    255
+                ],
+                [
+                    146,
+                    0,
+                    255
+                ]
+            ],
+            "name": "Drew Example Show"
+        },
+        {
+            "id": 14,
+            "type": 4,
+            "direction": 0,
+            "speed": 50,
+            "size": 6,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "RND RGB Chase"
+        },
+        {
+            "id": 22,
+            "type": 3,
+            "direction": 1,
+            "speed": 83,
+            "size": 16,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    0,
+                    0,
+                    0
+                ]
+            ],
+            "name": "PICO HARDWARE TEST"
+        },
+        {
+            "id": 24,
+            "type": 4,
+            "direction": 0,
+            "speed": 50,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "R&D Test"
+        },
+        {
+            "id": 25,
+            "type": 5,
+            "direction": 0,
+            "speed": 67,
+            "size": 18,
+            "pause": 0,
+            "splits": 2,
+            "colorsList": [
+                [
+                    0,
+                    170,
+                    255
+                ],
+                [
+                    251,
+                    0,
+                    255
+                ],
+                [
+                    255,
+                    115,
+                    0
+                ]
+            ],
+            "name": "Cyan Pink Orange Chase"
+        },
+        {
+            "id": 28,
+            "type": 2,
+            "direction": 2,
+            "speed": 57,
+            "size": 10,
+            "pause": 0,
+            "splits": 2,
+            "colorsList": [
+                [
+                    189,
+                    0,
+                    0
+                ],
+                [
+                    5,
+                    113,
+                    6
+                ],
+                [
+                    0,
+                    113,
+                    235
+                ],
+                [
+                    92,
+                    0,
+                    153
+                ],
+                [
+                    209,
+                    94,
+                    0
+                ]
+            ],
+            "name": "Logan's Nature Show"
+        },
+        {
+            "id": 31,
+            "type": 1,
+            "direction": 0,
+            "speed": 49,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    214,
+                    214,
+                    255
+                ]
+            ],
+            "name": "White 50%"
+        },
+        {
+            "id": 42,
+            "type": 6,
+            "direction": 0,
+            "speed": 50,
+            "size": 8,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    0,
+                    86,
+                    214
+                ],
+                [
+                    255,
+                    171,
+                    1
+                ],
+                [
+                    153,
+                    36,
+                    79
+                ]
+            ],
+            "name": "COLOR TEST"
+        },
+        {
+            "id": 43,
+            "type": 4,
+            "direction": 0,
+            "speed": 29,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    255,
+                    255,
+                    255
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "Red White Blue Chase"
+        },
+        {
+            "id": 45,
+            "type": 6,
+            "direction": 0,
+            "speed": 9,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "rainbow SLOW test"
+        },
+        {
+            "id": 103,
+            "type": 6,
+            "direction": 0,
+            "speed": 50,
+            "size": 8,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "RND Rainbow Wave"
+        },
+        {
+            "id": 118,
+            "type": 4,
+            "direction": 1,
+            "speed": 100,
+            "size": 14,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ],
+                [
+                    245,
+                    236,
+                    0
+                ]
+            ],
+            "name": "Technician Test"
+        },
+        {
+            "id": 119,
+            "type": 5,
+            "direction": 0,
+            "speed": 22,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "RGB Fade Chase"
+        },
+        {
+            "id": 131,
+            "type": 2,
+            "direction": 0,
+            "speed": 88,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    42,
+                    0
+                ],
+                [
+                    92,
+                    7,
+                    0
+                ]
+            ],
+            "name": "Red Dryers"
+        },
+        {
+            "id": 135,
+            "type": 4,
+            "direction": 1,
+            "speed": 85,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    77,
+                    0
+                ],
+                [
+                    0,
+                    17,
+                    255
+                ]
+            ],
+            "name": "WiFi Demo Show"
+        },
+        {
+            "id": 146,
+            "type": 1,
+            "direction": 0,
+            "speed": 49,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    255,
+                    255
+                ]
+            ],
+            "name": "White 100%"
+        },
+        {
+            "id": 154,
+            "type": 5,
+            "direction": 0,
+            "speed": 88,
+            "size": 17,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    227,
+                    36,
+                    0
+                ],
+                [
+                    255,
+                    147,
+                    0
+                ]
+            ],
+            "name": "Dryer Flame"
+        },
+        {
+            "id": 184,
+            "type": 4,
+            "direction": 0,
+            "speed": 74,
+            "size": 13,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "drew FX tester"
+        },
+        {
+            "id": 206,
+            "type": 1,
+            "direction": 0,
+            "speed": 49,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "Blue"
+        },
+        {
+            "id": 207,
+            "type": 4,
+            "direction": 0,
+            "speed": 35,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "RGB Chase (L->R)"
+        },
+        {
+            "id": 208,
+            "type": 6,
+            "direction": 0,
+            "speed": 40,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "Rainbow Wave"
+        },
+        {
+            "id": 249,
+            "type": 5,
+            "direction": 0,
+            "speed": 73,
+            "size": 12,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    188,
+                    0,
+                    5
+                ],
+                [
+                    1,
+                    213,
+                    0
+                ],
+                [
+                    0,
+                    8,
+                    181
+                ]
+            ],
+            "name": "Fast rgb"
+        },
+        {
+            "id": 251,
+            "type": 1,
+            "direction": 0,
+            "speed": 2,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    0,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    0
+                ]
+            ],
+            "name": "Off"
+        },
+        {
+            "id": 252,
+            "type": 2,
+            "direction": 0,
+            "speed": 6,
+            "size": 18,
+            "pause": 0,
+            "splits": 3,
+            "colorsList": [
+                [
+                    255,
+                    81,
+                    255
+                ],
+                [
+                    0,
+                    253,
+                    255
+                ],
+                [
+                    255,
+                    147,
+                    0
+                ]
+            ],
+            "name": "Funky All Fade"
+        },
+        {
+            "id": 281,
+            "type": 6,
+            "direction": 0,
+            "speed": 20,
+            "size": 15,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    239,
+                    243,
+                    43
+                ],
+                [
+                    250,
+                    0,
+                    0
+                ]
+            ],
+            "name": "Zach's"
+        },
+        {
+            "id": 287,
+            "type": 5,
+            "direction": 0,
+            "speed": 49,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    218,
+                    81,
+                    0
+                ],
+                [
+                    0,
+                    161,
+                    216
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "Sam test"
+        },
+        {
+            "id": 290,
+            "type": 4,
+            "direction": 0,
+            "speed": 15,
+            "size": 15,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    174,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    238
+                ],
+                [
+                    200,
+                    0,
+                    255
+                ],
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    4,
+                    0,
+                    255
+                ]
+            ],
+            "name": "rope test"
+        },
+        {
+            "id": 321,
+            "type": 1,
+            "direction": 0,
+            "speed": 49,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    153,
+                    153,
+                    153
+                ]
+            ],
+            "name": "True white 50%"
+        },
+        {
+            "id": 354,
+            "type": 6,
+            "direction": 0,
+            "speed": 49,
+            "size": 20,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "Drew test"
+        },
+        {
+            "id": 360,
+            "type": 4,
+            "direction": 0,
+            "speed": 17,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "1000 Test Show"
+        },
+        {
+            "id": 364,
+            "type": 4,
+            "direction": 0,
+            "speed": 49,
+            "size": 18,
+            "pause": 0,
+            "splits": 1,
+            "colorsList": [
+                [
+                    255,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    255,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    255
+                ]
+            ],
+            "name": "** BETA SHOW use for the beta editor"
+        }
+    ],
+    "eventBlocks": [
+        {
+            "id": 1,
+            "name": "Rainbow Wave",
+            "color": "amber",
+            "showdata": [
+                103,
+                103,
+                103,
+                103,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "RND Rainbow Wave"
+        },
+        {
+            "id": 2,
+            "name": "Split By Groups",
+            "color": "blue",
+            "showdata": [
+                [
+                    2,
+                    13,
+                    9,
+                    25
+                ],
+                9,
+                9,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "Red White Blue SHOW 2, Drew Example Show, Rainbow Wave Works, Cyan Pink Orange Chase, RND SHOW 1"
+        },
+        {
+            "id": 3,
+            "name": "Split",
+            "color": "fuchsia",
+            "showdata": [
+                9,
+                2,
+                14,
+                14,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "Rainbow Wave Works, Red White Blue SHOW 2, RND RGB Chase"
+        },
+        {
+            "id": 4,
+            "name": "red white blue",
+            "color": "emerald",
+            "showdata": [
+                2,
+                2,
+                2,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "Red White Blue SHOW 2"
+        },
+        {
+            "id": 5,
+            "name": "sydney",
+            "color": "orange",
+            "showdata": [
+                29,
+                29,
+                29,
+                29
+            ],
+            "showstext": "asdfasdfasdf"
+        },
+        {
+            "id": 6,
+            "name": "white",
+            "color": "red",
+            "showdata": [
+                43,
+                24,
+                43,
+                43,
+                43,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "Red White Blue Chase, R&D Test"
+        },
+        {
+            "id": 7,
+            "name": "COLOR TESTER",
+            "color": "sky",
+            "showdata": [
+                42,
+                35,
+                42,
+                35,
+                42,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "COLOR TEST, color"
+        },
+        {
+            "id": 8,
+            "name": "rainbow slow",
+            "color": "lime",
+            "showdata": [
+                45,
+                45,
+                45,
+                45,
+                45,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "rainbow SLOW test"
+        },
+        {
+            "id": 9,
+            "name": "FX tester",
+            "color": "violet",
+            "showdata": [
+                184,
+                184,
+                184,
+                184,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "drew FX tester"
+        },
+        {
+            "id": 10,
+            "name": "inactive tester",
+            "color": "violet",
+            "showdata": [
+                0,
+                146,
+                35,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "White, color"
+        },
+        {
+            "id": 11,
+            "name": "this shoudl crash it",
+            "color": "red",
+            "showdata": [
+                190,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "show im about to delete, "
+        },
+        {
+            "id": 12,
+            "name": "zachs",
+            "color": "sky",
+            "showdata": [
+                [
+                    206,
+                    206,
+                    281,
+                    281
+                ],
+                0,
+                28,
+                146,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "Blue, Zach's, Logan's Nature Show, White 100%"
+        }
+    ],
+    "scheduleBlocks": [
+        {
+            "id": 3,
+            "eventBlockId": 1,
+            "day": 4,
+            "start": 13,
+            "height": 12
+        },
+        {
+            "id": 4,
+            "eventBlockId": 2,
+            "day": 5,
+            "start": 1,
+            "height": 8
+        },
+        {
+            "id": 6,
+            "eventBlockId": 2,
+            "day": 4,
+            "start": 4,
+            "height": 6
+        },
+        {
+            "id": 8,
+            "eventBlockId": 3,
+            "day": 1,
+            "start": 12,
+            "height": 2
+        },
+        {
+            "id": 12,
+            "eventBlockId": 3,
+            "day": 3,
+            "start": 1,
+            "height": 4
+        },
+        {
+            "id": 13,
+            "eventBlockId": 1,
+            "day": 6,
+            "start": 1,
+            "height": 2
+        },
+        {
+            "id": 15,
+            "eventBlockId": 1,
+            "day": 6,
+            "start": 1,
+            "height": 2
+        },
+        {
+            "id": 16,
+            "eventBlockId": 5,
+            "day": 3,
+            "start": 6,
+            "height": 12
+        },
+        {
+            "id": 17,
+            "eventBlockId": 3,
+            "day": 4,
+            "start": 1,
+            "height": 3
+        },
+        {
+            "id": 22,
+            "eventBlockId": 6,
+            "day": 2,
+            "start": 1,
+            "height": 10
+        },
+        {
+            "id": 29,
+            "eventBlockId": 2,
+            "day": 2,
+            "start": 11,
+            "height": 4
+        },
+        {
+            "id": 32,
+            "eventBlockId": 8,
+            "day": 3,
+            "start": 18,
+            "height": 7
+        },
+        {
+            "id": 33,
+            "eventBlockId": 1,
+            "day": 1,
+            "start": 14,
+            "height": 11
+        },
+        {
+            "id": 35,
+            "eventBlockId": 6,
+            "day": 1,
+            "start": 4,
+            "height": 8
+        },
+        {
+            "id": 39,
+            "eventBlockId": 10,
+            "day": 5,
+            "start": 11,
+            "height": 8
+        },
+        {
+            "id": 41,
+            "eventBlockId": 11,
+            "day": 7,
+            "start": 4,
+            "height": 3
+        },
+        {
+            "id": 42,
+            "eventBlockId": 4,
+            "day": 7,
+            "start": 19,
+            "height": 6
+        },
+        {
+            "id": 43,
+            "eventBlockId": 1,
+            "day": 7,
+            "start": 7,
+            "height": 12
+        },
+        {
+            "id": 44,
+            "eventBlockId": 1,
+            "day": 2,
+            "start": 15,
+            "height": 10
+        },
+        {
+            "id": 45,
+            "eventBlockId": 1,
+            "day": 5,
+            "start": 19,
+            "height": 6
+        },
+        {
+            "id": 46,
+            "eventBlockId": 12,
+            "day": 1,
+            "start": 1,
+            "height": 3
+        },
+        {
+            "id": 47,
+            "eventBlockId": 12,
+            "day": 4,
+            "start": 10,
+            "height": 1
+        },
+        {
+            "id": 48,
+            "eventBlockId": 12,
+            "day": 5,
+            "start": 10,
+            "height": 1
+        },
+        {
+            "id": 49,
+            "eventBlockId": 12,
+            "day": 6,
+            "start": 3,
+            "height": 6
+        },
+        {
+            "id": 50,
+            "eventBlockId": 12,
+            "day": 7,
+            "start": 1,
+            "height": 3
+        },
+        {
+            "id": 51,
+            "eventBlockId": 1,
+            "day": 6,
+            "start": 9,
+            "height": 16
+        }
+    ],
+    "customBlocks": [
+        {
+            "id": 1,
+            "name": "Test Custom Show (RWB)",
+            "color": "amber",
+            "showdata": [
+                2,
+                2,
+                2,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "Red White Blue SHOW 2",
+            "month": 3,
+            "day": 27,
+            "startHour": 17,
+            "startMinute": 44,
+            "endHour": 18,
+            "endMinute": 0
+        },
+        {
+            "id": 2,
+            "name": "Test 2 with Date Range",
+            "color": "blue",
+            "showdata": [
+                2,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "showstext": "Red White Blue SHOW 2",
+            "startMonth": 11,
+            "startDay": 1,
+            "endMonth": 4,
+            "endDay": 1,
+            "startHour": 18,
+            "startMinute": 0,
+            "endHour": 21,
+            "endMinute": 0
+        }
+    ],
+    "fixtureTypes": [
+        {
+            "id": 1,
+            "manufacturer": "J Squared Systems",
+            "name": "Magniflood",
+            "shortname": "Flood",
+            "color": "RGB",
+            "segments": 1,
+            "channels": 3,
+            "multicountonefixture": false
+        },
+        {
+            "id": 2,
+            "manufacturer": "J Squared Systems",
+            "name": "Magnisconce",
+            "shortname": "Sconce",
+            "color": "RGB",
+            "segments": 1,
+            "channels": 3,
+            "multicountonefixture": false
+        },
+        {
+            "id": 3,
+            "manufacturer": "J Squared Systems",
+            "name": "Magnibar",
+            "shortname": "Bar",
+            "color": "RGB",
+            "segments": 6,
+            "channels": 18,
+            "multicountonefixture": false
+        },
+        {
+            "id": 4,
+            "manufacturer": "J Squared Systems",
+            "name": "Magnitube",
+            "shortname": "Tube",
+            "color": "RGBW",
+            "segments": 22,
+            "channels": 88,
+            "multicountonefixture": false
+        },
+        {
+            "id": 5,
+            "manufacturer": "J Squared Systems",
+            "name": "Magnisign",
+            "shortname": "Sign",
+            "color": "RGB",
+            "segments": 1,
+            "channels": 3,
+            "multicountonefixture": false
+        },
+        {
+            "id": 6,
+            "manufacturer": "J Squared Systems",
+            "name": "Magnirope",
+            "shortname": "Rope",
+            "color": "RGBW",
+            "segments": 1,
+            "channels": 4,
+            "multicountonefixture": true
+        },
+        {
+            "id": 7,
+            "manufacturer": "Generic",
+            "name": "Generic",
+            "shortname": "RGB",
+            "color": "RGB",
+            "segments": 1,
+            "channels": 3,
+            "multicountonefixture": false
+        },
+        {
+            "id": 8,
+            "manufacturer": "Generic",
+            "name": "Generic",
+            "shortname": "RGBW",
+            "color": "RGBW",
+            "segments": 1,
+            "channels": 4,
+            "multicountonefixture": false
+        },
+        {
+            "id": 9,
+            "manufacturer": "Generic",
+            "name": "Generic",
+            "shortname": "WRGB",
+            "color": "WRGB",
+            "segments": 1,
+            "channels": 4,
+            "multicountonefixture": false
+        },
+        {
+            "id": 10,
+            "manufacturer": "J Squared Systems",
+            "name": "Magnican",
+            "shortname": "Can",
+            "color": "RGBW",
+            "segments": 1,
+            "channels": 4,
+            "multicountonefixture": false
+        }
+    ],
+    "senses": [],
+    "overrides": [
+        {
+            "id": 1,
+            "name": "RGB & RWB",
+            "showsdata": "[[14,0,0,43],14,14,14,0,0,0,0,0,0]"
+        },
+        {
+            "id": 2,
+            "name": "White a little",
+            "showsdata": "[[0,0,146,0],0,146,146,0,0,0,0,0,0]"
+        },
+        {
+            "id": 38,
+            "name": "ALL WHITE",
+            "showsdata": "[146,146,146,146,0,0,0,0,0,0]"
+        },
+        {
+            "id": 39,
+            "name": "Transparent",
+            "showsdata": "[206,0,0,0,0,0,0,0,0,0]"
+        }
+    ],
+    "webOverrides": [
+        {
+            "id": 11,
+            "name": "White 15 mins",
+            "override_id": 38,
+            "active": false,
+            "mode": "Pulse",
+            "time": "15",
+            "timemode": "min"
+        },
+        {
+            "id": 12,
+            "name": "RGB & RWB",
+            "override_id": 1,
+            "active": false,
+            "mode": "Pulse",
+            "time": "5",
+            "timemode": "sec"
+        },
+        {
+            "id": 13,
+            "name": "Web Override #3",
+            "override_id": 0,
+            "active": false,
+            "mode": "Pulse",
+            "time": "1",
+            "timemode": "hour"
+        },
+        {
+            "id": 14,
+            "name": "Blue 2hour",
+            "override_id": 39,
+            "active": false,
+            "mode": "Pulse",
+            "time": "2",
+            "timemode": "hour"
+        },
+        {
+            "id": 15,
+            "name": "Transparent Blue",
+            "override_id": 39,
+            "active": false,
+            "mode": "Pulse",
+            "time": "15",
+            "timemode": "sec"
+        }
+    ]
+}
