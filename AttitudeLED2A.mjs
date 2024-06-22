@@ -8,23 +8,22 @@
 
 
 
-// import modules
+// ==================== IMPORT ====================
 import eventHub from './EventHub.mjs';
+import { SerialPort } from 'serialport';
 
 import Logger from './Logger.mjs';
 const logger = new Logger('AttitudeLED');
 
-import { SerialPort } from 'serialport';
 
 
-
-// variables
+// ==================== VARIABLES ====================
 const LAPTOP_MODE = (process.platform == 'darwin');
 const WRITE_COLOR_TO_PORT_INTERVAL = 500; // interval to write the current color to the port
 
 
 
-// Define the AttitudeLED class to handle the Attitude LED panel control
+// ==================== CLASS DEFINITION ====================
 class AttitudeLED {
 
 	// constructor

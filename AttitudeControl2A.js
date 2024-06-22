@@ -20,11 +20,23 @@ import eventHub from './EventHub.mjs';
 import networkModule from './NetworkModule.mjs';
 import statusTracker from './StatusTracker.mjs';
 import configManager from './ConfigManager.mjs';
-import attitudeLED from './AttitudeLED2A.mjs';
+// import attitudeLED from './AttitudeLED2A.mjs'; // temp disabled
+import attitudeSACN from './AttitudeSACN2A.mjs';
 
 
 
-attitudeLED.setColor('A');
+// attitudeLED.setColor('A');
+
+
+attitudeSACN.initialize(16);
+
+attitudeSACN.set(1,1,255);
+attitudeSACN.set(1,2,0);
+attitudeSACN.set(1,3,255);
+attitudeSACN.set(1,4,255);
+attitudeSACN.set(1,5,0);
+attitudeSACN.set(1,6,255);
+attitudeSACN.set(1,15,255);
 
 
 
