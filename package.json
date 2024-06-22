@@ -2,6 +2,7 @@
   "type": "module",
   "dependencies": {
     "node-fetch": "^3.3.2",
-    "npmlog": "^7.0.1"
+    "npmlog": "^7.0.1",
+    "serialport": "^12.0.0"
   }
 }

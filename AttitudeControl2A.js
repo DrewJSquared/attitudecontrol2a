@@ -20,10 +20,11 @@ import eventHub from './EventHub.mjs';
 import networkModule from './NetworkModule.mjs';
 import statusTracker from './StatusTracker.mjs';
 import configManager from './ConfigManager.mjs';
+import attitudeLED from './AttitudeLED2A.mjs';
 
 
 
-
+attitudeLED.setColor('A');
 
 
 

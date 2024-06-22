@@ -1,10 +1,10 @@
-// EventHub.mjs
-// event hub module for the Attitude Control 2.A app
+// ConfigManager.mjs
+// configuration data module for the Attitude Control 2.A app
 // copyright 2024 Drew Shipps, J Squared Systems
 
 
-// this module creates a single instance of the EventEmitter javascript object,
-// which coordinates all events across the other modules
+// this module creates a single instance of the ConfigManager javascript object,
+// which coordinates the configuration data across all other modules
 
 
 
