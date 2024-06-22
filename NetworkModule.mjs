@@ -24,7 +24,7 @@ const logger = new Logger('NetworkModule.mjs');
 
 // variables
 const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
-const PING_INTERVAL = 1000;  // interval in ms to ping the server
+const PING_INTERVAL = 5000;  // interval in ms to ping the server
 
 
 
@@ -61,12 +61,12 @@ class NetworkModule {
     	// log the initialization
     	logger.info('Initializing network module...');
 
-        // Start the interval for sending network requests
+        // start the interval for sending network requests
         this.startInterval();
 
-        // Register event listeners for logging and status updates
-        eventHub.on('log', this.logEventListener.bind(this));
-        eventHub.on('statusUpdate', this.statusUpdateListener.bind(this));
+        // bind event listeners for logging and status updates
+        eventHub.on('log', this.logListener.bind(this));
+        // eventHub.on('statusUpdate', this.statusUpdateListener.bind(this));
 
     	// log the initialization
     	logger.info('Network module initialization complete!');
@@ -86,13 +86,12 @@ class NetworkModule {
 
     // perform a network request to send queued data to the server
     performNetworkRequest() {
+    	// log that we're performing a request
     	logger.info(`Performing network request at ${ new Date().toLocaleTimeString() }`);
 
-
-    	// consolidate the current queue into a payload
+    	// grab the entire current queue into a payload for this particular request (this clears the queue)
     	const payload = this.queue.splice(0, this.queue.length);
-    	console.log('PAYLOAD: ', payload);
-
+    	console.log('PAYLOAD', payload);
 
     	// Make a POST request to the API endpoint with the request data
 		fetch(this.url, {
@@ -117,54 +116,29 @@ class NetworkModule {
 
 		// then handle the data from the response
 		.then(data => {
-			// TEMP log data to console
-		    console.log('Response:', data);
+			// log a success message
+    		logger.info(`Network request was successful! Connected to attitude.lighting server!`);
 
-		    // throw new Error(`Manualy thrown error in data parse....`);
+    		// handle the response data
+    		this.handleResponse(data);
+
+		    // NOTE: because of the error handling logic below, 
+		    // errors here in processing of received data will cause a re-transfer of previous data.
+		    // So it's important to try to avoid errors here in this function when processing response data
+		    // after data is succesfully sent to server.
 		})
 
 		// and catch any errors that occur
 		.catch(error => {
 			// log error to logger, which will show in console and queue log to be sent to server
     		logger.error(`Error during network request or response handling: ${error.message}`);
+
+    		// since there was an error of some sort, these messages should be added back to the queue and re-sent to server
+    		// unshift the queue by adding this payload (which failed) to the front
+    		this.queue.unshift(...payload);
 		});
-
-
-
-/*
-
-
-
-        if (this.queue.length === 0) return;
-
-        const dataToSend = this.dequeueData();
-
-        try {
-            // Send a POST request to the server with the queued data
-            const response = await fetch(this.url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(dataToSend)
-            });
-
-            // Check if the response is successful
-            if (response.ok) {
-                // Parse the response data and handle it
-                const responseData = await response.json();
-                this.handleResponse(responseData);
-            } else {
-                // Throw an error if the network request fails
-                throw new Error(`Network request failed with status ${response.status}`);
-            }
-        } catch (error) {
-            // Handle errors encountered during the network request
-            this.handleError(error, dataToSend);
-        }
-
-        */
     }
+
 
     // Handle the response data from the server
     handleResponse(data) {
@@ -179,48 +153,26 @@ class NetworkModule {
         }
     }
 
-    // Enqueue data for sending to the server
-    enqueueData(data) {
-        this.queue.push(data);
+
+    // add data into the queue for sending to the server
+    // takes the type (a string such as 'log') and the data payload, creates an object, and adds it to queue
+    enqueueData(type, data) {
+        this.queue.push({
+        	type: type,
+        	timestamp: new Date(),
+        	data: data,
+        });
     }
 
-    // Dequeue data from the queue for sending to the server
-    dequeueData() {
-        return this.queue.shift();
-    }
 
-/*
-    // Start the interval for retrying failed requests
-    startRetryInterval() {
-        setInterval(() => {
-            // Check if there are failed requests to retry
-            if (this.failedRequests.length > 0) {
-                // Retrieve the first failed request and enqueue it for retry
-                const failedRequest = this.failedRequests.shift();
-                this.enqueueData(failedRequest);
-            }
-        }, this.retryInterval);
-    }
-    */
-
-    // Handle errors encountered during the network request
-    handleError(error, data) {
-        console.error('Network request failed:', error);
-
-        // Add the failed request data to the queue for retry
-        this.failedRequests.push(data);
-    }
-
-    // Event listener for logging events
-    logEventListener(log) {
-        this.enqueueData({ type: 'log', data: log });
-    }
-
-    // Event listener for status update events
-    statusUpdateListener(statusUpdate) {
-        this.enqueueData({ type: 'statusUpdate', data: statusUpdate });
+    // event listener for log events
+    // this function is bound to the event that's triggered when a 'log' is fired from the eventHub
+    // it then grabs that log and adds it to the queue
+    logListener(log) {
+        this.enqueueData('log', log);
     }
 }
+
 
 
 // Create an instance of the NetworkModule and initialize it with the config variables at the top of this file
