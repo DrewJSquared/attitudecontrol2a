@@ -9,7 +9,7 @@
 
 
 // import modules
-import eventHub from './eventHub.mjs';
+import eventHub from './EventHub.mjs';
 import fetch from 'node-fetch';
 
 import Logger from './Logger.mjs';
@@ -25,7 +25,6 @@ const logger = new Logger('NetworkModule.mjs');
 // variables
 const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
 const PING_INTERVAL = 5000;  // interval in ms to ping the server
-
 
 
 
@@ -91,7 +90,7 @@ class NetworkModule {
 
     	// grab the entire current queue into a payload for this particular request (this clears the queue)
     	const payload = this.queue.splice(0, this.queue.length);
-    	console.log('PAYLOAD', payload);
+    	// console.log('PAYLOAD', payload);
 
     	// Make a POST request to the API endpoint with the request data
 		fetch(this.url, {
@@ -142,15 +141,17 @@ class NetworkModule {
 
     // Handle the response data from the server
     handleResponse(data) {
-        // Update the device configuration if provided in the response
-        if (data.configUpdate) {
-            configManager.updateConfig(data.configUpdate);
-        }
+    	console.log('Received response from server:', data.message);
 
-        // Update the device status if provided in the response
-        if (data.deviceStatus) {
-            deviceManager.updateStatus(data.deviceStatus);
-        }
+        // // Update the device configuration if provided in the response
+        // if (data.configUpdate) {
+        //     configManager.updateConfig(data.configUpdate);
+        // }
+
+        // // Update the device status if provided in the response
+        // if (data.deviceStatus) {
+        //     deviceManager.updateStatus(data.deviceStatus);
+        // }
     }
 
 

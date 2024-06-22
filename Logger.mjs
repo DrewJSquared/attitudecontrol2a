@@ -5,7 +5,7 @@
 
 // import modules
 import npmlog from 'npmlog';
-import eventHub from './eventHub.mjs';
+import eventHub from './EventHub.mjs';
 
 
 // variables & options

@@ -16,9 +16,12 @@
 import Logger from './Logger.mjs';
 const logger = new Logger('AttitudeControl2A.js');
 
-import eventHub from './eventHub.mjs';
+import eventHub from './EventHub.mjs';
 import networkModule from './NetworkModule.mjs';
 
+
+
+import statusTracker from './StatusTracker.mjs';
 
 
 // logger.log('info', 'Initial test of the logger app!');
