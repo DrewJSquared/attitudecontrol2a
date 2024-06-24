@@ -21,7 +21,7 @@ import { DateTime } from 'Luxon';
 
 
 // ==================== VARIABLES ====================
-const PROCESS_SCHEDULE_INTERVAL = 2000;  // interval speed for recalculating the schedule in milliseconds
+const PROCESS_SCHEDULE_INTERVAL = 1000;  // interval speed for recalculating the schedule in milliseconds
 // might make this something configurable by the server later
 
 const MAX_ZONES_COUNT = 10;  // max number of zones in the patch
@@ -76,7 +76,7 @@ class AttitudeScheduler {
     processSchedule() {
     	// try to process schedule
     	try {
-    		// grab the most up to date schedule config blocks
+    		// grab the most up to date schedule config blocks & timestamp from configManager
     		this.updateScheduleConfigration();
 
     		// update the current timestamp based on timezone in config and 
@@ -237,7 +237,7 @@ class AttitudeScheduler {
 			});
 
 		    // log that we finished (optional)
-		    logger.info('Processed custom schedule blocks:  ' + JSON.stringify(this.processedShowIds.customScheduleBlocks));
+		    logger.info('Processed custom schedule blocks: ' + JSON.stringify(this.processedShowIds.customScheduleBlocks));
     	} catch (error) {
     		// else log error
             logger.error(`Error processing custom schedule blocks: ${error}`);
@@ -254,6 +254,7 @@ class AttitudeScheduler {
     	try {
 
     		// TODO IMPLEMENT OVERRIDES HERE
+    		logger.warn(`Overrides processing hasn't yet been implemented!`);
 
 			this.processedShowIds.overrides = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     		
@@ -297,7 +298,7 @@ class AttitudeScheduler {
 		    });
 
 		    // log that we finished (optional)
-		    logger.info('Processed web overrides:  ' + JSON.stringify(this.processedShowIds.webOverrides));
+		    logger.info('Processed web overrides: ' + JSON.stringify(this.processedShowIds.webOverrides));
     	} catch (error) {
     		// else log error
             logger.error(`Error processing web overrides: ${error}`);
