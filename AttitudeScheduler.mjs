@@ -14,7 +14,6 @@ const logger = new Logger('AttitudeScheduler');
 
 import eventHub from './EventHub.mjs';
 import configManager from './ConfigManager.mjs';
-import attitudeSACN from './AttitudeSACN2A.mjs';
 
 import { DateTime } from 'Luxon';
 
@@ -58,13 +57,16 @@ class AttitudeScheduler {
         this.processedShowIds.overrides = new Array(MAX_ZONES_COUNT).fill(0);
         this.processedShowIds.webOverrides = new Array(MAX_ZONES_COUNT).fill(0);
         this.processedShowIds.final = new Array(MAX_ZONES_COUNT).fill(0);
+
+        // setup variable to hold the interval
+        this.processScheduleInterval;
 	}
 
 
 	// Initialize the scheduler and start the interval
     init() {
         // Start the scheduling interval to run processSchedule function
-        this.intervalId = setInterval(() => {
+        this.processScheduleInterval = setInterval(() => {
             this.processSchedule();
         }, PROCESS_SCHEDULE_INTERVAL);
 
@@ -92,15 +94,37 @@ class AttitudeScheduler {
     		this.layerScheduleToCreateFinal();
 
     		// log the final output schedule
-    		logger.info('Processed schedule and determined final show ids: ' + JSON.stringify(this.processedShowIds.final));
-
-    		// TODO fire some sort of event here to update the fixture patch & shows data?
+    		logger.info('Processed schedule and determined final show ids: ' + JSON.stringify(this.processedShowIds?.final));
     	} catch (error) {
     		// else log error
             logger.error(`Error processing schedule: ${error}`);
 
             // TODO note error here and maybe fire an event? force us to go to white backup mode?
         }
+    }
+
+
+    // getFinalSchedule - getter function to return the final processed schedule
+    getFinalSchedule() {
+		// try to get the parameter, else throw/log an error and return a default
+		try {
+			// ? is the safe optional chaining operator that safely grabs those properties
+	        const finalSchedule = this.processedShowIds?.final;
+
+	        // if undefined then we have an error
+	        if (finalSchedule === undefined) {
+	            throw new Error('processedShowIds or .final is invalid!');
+	        }
+
+	        // else return the grabbed tiemzone
+	        return finalSchedule;
+	    } catch (error) {
+	    	// log the error to logger
+	        logger.error(`Error accessing this.processedShowIds.final: ${error.message}`);
+
+	        // return default (an array of zeroes)
+	        return new Array(MAX_ZONES_COUNT).fill(0);
+	    }
     }
 
 

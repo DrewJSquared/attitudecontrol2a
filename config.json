@@ -1638,7 +1638,7 @@
       "id": 11,
       "name": "White 15 mins",
       "override_id": 38,
-      "active": 0,
+      "active": false,
       "mode": "Pulse",
       "time": "15",
       "timemode": "min"

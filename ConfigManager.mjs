@@ -122,6 +122,37 @@ class ConfigManager {
 
 
 	// ----- GETTER METHODS FOR DIFFERENT PARTS OF CONFIGURATION ------
+	
+	// fixtures
+	getFixtures() {
+        const data = this.config?.patch?.fixturesList;
+
+        // if undefined then log that we have an error and return empty array
+        if (data === undefined) {
+            logger.error(`Error accessing fixturesList! Invalid or undefined config.patch!`);
+            return [];
+        }
+
+        return data;
+	}
+
+	// zones
+	getZones() {
+        const data = this.config?.patch?.zonesList;
+
+        // if undefined then log that we have an error and return empty array
+        if (data === undefined) {
+            logger.error(`Error accessing zonesList! Invalid or undefined config.patch!`);
+            return [];
+        }
+
+        return data;
+	}
+
+	// shows
+	getShows() {
+        return this.config.shows || [];
+	}
 
 	// scheduleBlocks
 	getScheduleBlocks() {

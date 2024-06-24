@@ -23,8 +23,10 @@ import configManager from './ConfigManager.mjs';
 // import attitudeLED from './AttitudeLED2A.mjs';
 import attitudeSACN from './AttitudeSACN2A.mjs';
 import attitudeScheduler from './AttitudeScheduler.mjs';
+import attitudeFixtureManager from './AttitudeFixtureManager.mjs';
 
 attitudeScheduler.init();
+attitudeFixtureManager.init();
 
 
 
