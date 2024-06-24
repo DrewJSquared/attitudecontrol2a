@@ -149,6 +149,10 @@ class ConfigManager {
         return data;
 	}
 
+	getFixtureTypes() {
+		return this.config.fixtureTypes || [];
+	}
+
 	// shows
 	getShows() {
         return this.config.shows || [];

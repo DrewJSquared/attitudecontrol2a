@@ -46,6 +46,36 @@ attitudeSACN.initialize(16);
 
 
 
+setInterval(function() {
+
+// add a show to the congiuration
+let newShow = {
+	id: 404,
+	name: 'RGB Chase Show on New Engine',
+	engineVersion: '2A',
+	type: 'Chase',
+    direction: 'Left to Right',
+    speed: 50,
+    size: 34,
+    splits: 1,
+    transition: 'Both Edges',
+    transitionWidth: 0,
+    bounce: false,
+    colors: [
+        { red: 255, green: 0, blue: 0 },
+        { red: 0, green: 255, blue: 0 },
+        { red: 0, green: 0, blue: 255 },
+    ],
+}
+configManager.config.shows.push(newShow);
+
+// update a web override to run this show
+configManager.config.webOverrides[0].active = true;
+configManager.config.overrides[2].showsdata = '[0,404,0,0,0,0,0,0,0,0]';
+// console.log(configManager.config.overrides);
+
+}, 500);
+
 
 
 

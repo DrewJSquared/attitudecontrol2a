@@ -67,20 +67,26 @@ class AttitudeFixtureManager {
     processFixtures() {
     	// try to process fixtures
     	try {
-
     		// temp
         	logger.info('Processing fixtures/shows/schedule...');
-
 
     		// get fixtures/zones/shows configManager and schedule from attitudeScheduler
         	this.getConfigration();
 
+        	// find unique show IDs in schedule
+			this.uniqueShowIds = this.findUniqueNumbers(this.schedule);
 
+			// generate/remove engine instances if needed
+			this.generateEngineInstances();
 
-        	this.processShows();
+			// process each engine instance, updating engine config if necesary and running engine
+			this.processEngineInstances();
 
+        	// process the patch and schedule, then grab the output data from the engine and apply it to DMX
+        	this.processPatchAndOutputShows();
 
-
+    		// temp
+        	logger.info('Successfully finished processing fixtures/shows/schedule and output data to sACN!');
     	} catch (error) {
     		// else log error
             logger.error(`Error processing fixtures: ${error}`);
@@ -106,31 +112,208 @@ class AttitudeFixtureManager {
 	}
 
 
-	// processShows - function that takes all the show IDs present in the schedule, 
-	// processes each show data, and stores the engine instance for it
-	processShows() {
-		// find unique show IDs
-		this.uniqueShowIds = this.findUniqueNumbers(this.schedule);
+	// process the patch and schedule, then grab the output data from the engine and apply it to DMX
+	processPatchAndOutputShows() {
 
-		// generate/remove engine instances if needed
-		this.generateEngineInstances();
+		// iterate over each zone
+		this.zones.forEach((zone, index) => {
+			// try catch
+			try {
+				// grab the scheduled show or shows for this zone
+				let currentZoneSchedule = this.schedule[index] ?? 0;
 
-		// processEngineInstances
-		this.generateEngineInstances();
+				// check if there's groups in the schedule
+				if (currentZoneSchedule.length > 0) {
+					// check if there's groups in the zone
+					if (zone.groups.length > 0) {
+						// iterate over each group
+						zone.groups.forEach((group, groupIndex) => {
+							// try catch
+							try {
+								// grab the show for this group
+								let currentGroupShowId = currentZoneSchedule[groupIndex] ?? 0;
 
-		console.log('uniqueShowIds', this.uniqueShowIds);
-		console.log('engineInstances', this.engineInstances);
+								// grab the fixtures for this show
+								// make sure to always return an array of items using Array.of and spread syntax
+								let fixturesForThisShow = Array.of(...this.fixtures.filter(item => item.zoneNumber === (index + 1)
+																 && item.groupNumber === (groupIndex + 1)));
+
+								// apply this show ID to these fixtures
+								this.applyShowToFixtures(currentGroupShowId, fixturesForThisShow);
+							} catch (error) {
+								// log the error while processing this group
+								logger.error(`Error while processing zone ${index+1} group ${groupIndex+1}: ${error.message}`);
+							}
+						});
+					} else {
+						// if not then we have a weird error
+						throw new Error('This zone has groups in the schedule, but not in the zone!');
+					}
+				} else {
+					// otherwise no groups in this zone, so all fixtures tied to this zone should be used
+					// make sure to always return an array of items using Array.of and spread syntax
+					let fixturesForThisShow = Array.of(...this.fixtures.filter(itm => itm.zoneNumber === (index + 1)));
+
+					// apply this show ID to these fixtures
+					this.applyShowToFixtures(currentZoneSchedule, fixturesForThisShow);
+				}
+			} catch (error) {
+				let zoneName = zone.name;
+				if (zoneName == undefined) {
+					zoneName = index;
+				}
+
+				logger.error(`Error while processing zone ${zoneName}: ${error}`);
+			}
+		});
+	}
+
+
+	// applyShowToFixtures - given a show ID and array of fixtures, apply the show to the fixtures
+	applyShowToFixtures(showId, fixtures) {
+		// validate fixtures
+		if (fixtures == undefined || fixtures.length == undefined) {
+			throw new Error('Fixtures or fixtures length is undefined!');
+		}
+
+		// validate the number of fixtures
+		if (fixtures.length == 0) {
+			logger.info('No fixtures for this show. Skipping.');
+			return;
+		}
+
+		// get the engineInstance for this show id
+	    let engineInstance = this.engineInstances.find(itm => itm.showId === showId);
+
+	    // check if it's undefined
+	    if (engineInstance == undefined) {
+	    	throw new Error(`Unable to find an engne instance for show id ${showId}!`);
+	    }
+
+	    // calculate all fixture segments (handling single, multicount, and segmented fixtures)
+	    let fixtureSegments = this.calculateAllFixtureSegments(fixtures);
+
+	    // set the number of total segments to calculate for
+	    engineInstance.engine.setFixtureCount(fixtureSegments.length);
+
+	    // now try to apply this show to the fixtures by iterating over each
+		fixtureSegments.forEach((fixtureSegment, index) => {
+			try {
+				// variable to hold the color for this fixture
+				let thisFixtureColor = engineInstance.engine.getFixtureColor(index);
+
+				// check color type & output DMX values
+				if (fixtureSegment.colorMode == 'RGB') {
+					// rgb
+					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress, thisFixtureColor.red);
+					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress+1, thisFixtureColor.green);
+					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress+2, thisFixtureColor.blue);
+				} else if (fixtureSegment.colorMode == 'RGBW') {
+					// if it's RGBW, calculate a white value from RGB
+					thisFixtureColor.white = this.calculateWhiteFromRGB(thisFixtureColor);
+
+					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress, thisFixtureColor.red);
+					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress+1, thisFixtureColor.green);
+					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress+2, thisFixtureColor.blue);
+					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress+3, thisFixtureColor.white);
+				} else {
+					throw new Error(`Unknown fixture color mode ${fixtureSegment.colorMode}`);
+				}
+			} catch (error) {
+				logger.error(`Error while applying show ${showId} to fixture ${fixture.name}: ${error.message}`);
+			}
+		});
+	}
+
+
+	// calculateAllFixtureSegments - process all fixtures, multicount fixtures, and segmented fixtures into a patch list
+	calculateAllFixtureSegments(fixturesList) {
+	    // Initialize an empty array to store the result
+	    const resultList = [];
+
+	    // grab the possible fixture types from configManager
+	    const fixtureTypes = configManager.getFixtureTypes();
+
+	    // Iterate through each fixture in the fixturesList
+	    for (const thisFixture of fixturesList) {
+	        // Find the fixture type using a hypothetical findFixtureType function
+	        const thisFixtureType = fixtureTypes.find(itm => itm.id == thisFixture.type);
+
+	        // Calculate channels per segment based on fixture type
+	        const channelsPerSegment = thisFixtureType.channels / thisFixtureType.segments || thisFixtureType.channels;
+
+	        // Determine how to handle each fixture based on its type and configuration
+	        if (thisFixtureType.multicountonefixture) {
+	            // Handle fixtures with multiple counts for one fixture
+	            for (let i = 0; i < thisFixture.quantity; i++) {
+	                const newObject = {
+	                    universe: thisFixture.universe,
+	                    startAddress: thisFixture.startAddress + (channelsPerSegment * i),
+	                    colorMode: thisFixtureType.color,
+	                };
+	                resultList.push(newObject);
+	            }
+	        } else if (thisFixtureType.segments > 1) {
+	            // Handle fixtures with multiple segments
+	            for (let i = 0; i < thisFixtureType.segments; i++) {
+	                const newObject = {
+	                    universe: thisFixture.universe,
+	                    startAddress: thisFixture.startAddress + (channelsPerSegment * i),
+	                    colorMode: thisFixtureType.color,
+	                };
+	                resultList.push(newObject);
+	            }
+	        } else {
+	            // Handle single fixtures
+	            const newObject = {
+	                universe: thisFixture.universe,
+	                startAddress: thisFixture.startAddress,
+	                colorMode: thisFixtureType.color,
+	            };
+	            resultList.push(newObject);
+	        }
+	    }
+
+	    // Return the final resultList containing all generated objects
+	    return resultList;
 	}
 
 
 	// processEngineInstances - process each engine instance
 	processEngineInstances() {
-		// update engine instance configuration based on show
+		// iterate over each engineInstance
+		this.engineInstances.forEach(engineInstance => {
+			// update engine instance configuration based on show
 
-		    // find the actual event block from the ID referenced in current schedule block
-		    const show = this.shows.find(itm => itm.id === currentScheduleBlock.eventBlockId);
+		    // find the show corresponding to this engineInstance
+		    const show = this.shows.find(itm => itm.id === engineInstance.showId);
 
-		// run engine
+		    // check if this show is compatible with the current engine
+		    if (show.engineVersion == '2A') {
+		    	logger.info(`Show ${show.name} IS compatible with the new engine! Updating config now...`);
+
+		    	// if so, update the parameters on the engine to match the show
+	            engineInstance.engine.configure({
+		            showType: show.type,
+		            direction: show.direction,
+		            speed: show.speed,
+		            size: show.size,
+		            splits: show.splits,
+		            transition: show.transition,
+		            transitionWidth: show.transitionWidth,
+		            bounce: show.bounce,
+		            colors: show.colors,
+		        });
+		    } else {
+		    	// otherwise log a warning about this show
+		    	// we're still going to process this show later, so that the fixtures it should run on will default 
+		    	// to gray (128,128,128) instead of black or no signal
+		    	logger.warn(`Show ${show.name} is not compatible with the new engine. Fixtures will be gray!`);
+		    }
+
+		    // now actually run the engine to process colors
+		    engineInstance.engine.run();
+		});
 	}
 
 
@@ -151,19 +334,18 @@ class AttitudeFixtureManager {
 	    this.uniqueShowIds.forEach(id => {
 	        if (!showMap.has(id)) {
 	        	// create the engine object
+	        	// whatever config is here will be the default for any invalid shows (ie. 1st gen engine shows)
 	        	let engine = new AttitudeEngine3({
 		            showType: SHOWTYPES.STATIC,
 		            direction: DIRECTIONS.LR,
 		            speed: 50,
-		            size: 34,
+		            size: 100,
 		            splits: 1,
 		            transition: TRANSITIONS.BOTH,
 		            transitionWidth: 0,
 		            bounce: false,
 		            colors: [
-		                { red: 255, green: 0, blue: 0 },
-		                { red: 0, green: 255, blue: 0 },
-		                { red: 0, green: 0, blue: 255 },
+		                { red: 128, green: 128, blue: 128 },
 		            ]
 		        });
 
@@ -198,6 +380,18 @@ class AttitudeFixtureManager {
 	    return [...uniqueNumbers];
 	}
 
+
+	// calculates the white value for RGBW fixtures from an RGB value
+	calculateWhiteFromRGB(rgb) {
+	    // Destructure red, green, and blue from the rgb object
+	    const { red, green, blue } = rgb;
+	    
+	    // Calculate the minimum value among red, green, and blue
+	    const minValue = Math.min(red, green, blue);
+	    
+	    // Return the minimum value
+	    return minValue;
+	}
 }
 
 
