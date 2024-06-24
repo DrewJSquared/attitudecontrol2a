@@ -119,6 +119,57 @@ class ConfigManager {
 	    // Return the updated object A
 	    return objA;
 	}
+
+
+	// ----- GETTER METHODS FOR DIFFERENT PARTS OF CONFIGURATION ------
+
+	// scheduleBlocks
+	getScheduleBlocks() {
+		return this.config.scheduleBlocks || [];
+	}
+
+	// eventBlocks
+	getEventBlocks() {
+		return this.config.eventBlocks || [];
+	}
+
+	// customBlocks 
+	getCustomBlocks() {
+		return this.config.customBlocks || [];
+	}
+	
+	// overrides
+	getOverrides() {
+		return this.config.overrides || [];
+	}
+	
+	// webOverrides
+	getWebOverrides() {
+		return this.config.webOverrides || [];
+	}
+
+	// timezone
+	getDeviceTimezone() {
+		// try to get the parameter, else throw/log an error and return a default
+		try {
+			// ? is the safe optional chaining operator that safely grabs those properties
+	        const timezone = this.config?.devicemeta?.timezone;
+
+	        // if undefined then we have an error
+	        if (timezone === undefined) {
+	            throw new Error('Either devicemeta or timezone is missing!');
+	        }
+
+	        // else return the grabbed tiemzone
+	        return timezone;
+	    } catch (error) {
+	    	// log the error to logger
+	        logger.error(`Error accessing config.devicemeta.timezone: ${error.message}`);
+
+	        // return default
+	        return 'America/Chicago';
+	    }
+	}
 }
 
 

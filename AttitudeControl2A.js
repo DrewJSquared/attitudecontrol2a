@@ -20,8 +20,11 @@ import eventHub from './EventHub.mjs';
 import networkModule from './NetworkModule.mjs';
 import statusTracker from './StatusTracker.mjs';
 import configManager from './ConfigManager.mjs';
-// import attitudeLED from './AttitudeLED2A.mjs'; // temp disabled
+// import attitudeLED from './AttitudeLED2A.mjs';
 import attitudeSACN from './AttitudeSACN2A.mjs';
+import attitudeScheduler from './AttitudeScheduler.mjs';
+
+attitudeScheduler.init();
 
 
 
@@ -30,13 +33,13 @@ import attitudeSACN from './AttitudeSACN2A.mjs';
 
 attitudeSACN.initialize(16);
 
-attitudeSACN.set(1,1,255);
-attitudeSACN.set(1,2,0);
-attitudeSACN.set(1,3,255);
-attitudeSACN.set(1,4,255);
-attitudeSACN.set(1,5,0);
-attitudeSACN.set(1,6,255);
-attitudeSACN.set(1,15,255);
+// attitudeSACN.set(1,1,255);
+// attitudeSACN.set(1,2,0);
+// attitudeSACN.set(1,3,255);
+// attitudeSACN.set(1,4,255);
+// attitudeSACN.set(1,5,0);
+// attitudeSACN.set(1,6,255);
+// attitudeSACN.set(1,15,255);
 
 
 
@@ -44,35 +47,73 @@ attitudeSACN.set(1,15,255);
 
 
 
-setTimeout(() => {
-	console.log('TIMEOUT ACTIVATED!');
-
-	logger.info('READING part of the device configuration...');
-
-	console.log(configManager.config.devicemeta.timezone);
-
-
-}, 4000);
 
 
 
-setTimeout(() => {
-	console.log('TIMEOUT ACTIVATED!');
+// 		logger.info('Hello world!');
 
-	logger.info('Updating part of the device configuration...');
+// setTimeout(function () {
+// 		logger.info('SENDING SOME DMX VALUES');
 
-	configManager.update({
-		devicemeta: {
-			timezone: 'America/Los_Angeles',
-			port1: 4,
-			port2: 3,
-			port3: 2,
-			port4: 1,
-		}
-	})
+// attitudeSACN.set(1,1,255);
+// attitudeSACN.set(1,2,0);
+// attitudeSACN.set(1,3,255);
+// attitudeSACN.set(1,4,255);
+// attitudeSACN.set(1,5,0);
+// attitudeSACN.set(1,6,255);
+// attitudeSACN.set(1,15,255);
 
 
-}, 2000);
+
+
+// 		logger.info('GETTING SOME SCHEDULE DATA');
+
+// 		var scheduleBlocks = configManager.getScheduleBlocks();
+
+// 		// console.log(configManager.getScheduleBlocks());
+// 		// console.log(configManager.getCustomBlocks());
+// 		// console.log(configManager.getOverrides());
+// 		// console.log(configManager.getWebOverrides());
+
+
+// }, 1000);
+
+
+
+
+
+
+
+
+// setTimeout(() => {
+// 	console.log('TIMEOUT ACTIVATED!');
+
+// 	logger.info('READING part of the device configuration...');
+
+// 	// console.log(configManager.config.devicemeta.timezone);
+
+
+// }, 4000);
+
+
+
+// setTimeout(() => {
+// 	console.log('TIMEOUT ACTIVATED!');
+
+// 	logger.info('Updating part of the device configuration...');
+
+// 	configManager.update({
+// 		devicemeta: {
+// 			timezone: 'America/Los_Angeles',
+// 			port1: 4,
+// 			port2: 3,
+// 			port3: 2,
+// 			port4: 1,
+// 		}
+// 	})
+
+
+// }, 2000);
 
 
 

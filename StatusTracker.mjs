@@ -59,7 +59,7 @@ class StatusTracker {
                 hostname: os.hostname(),
 
                 cpuCount: os.cpus().length,
-                cpuUsage: os.loadavg(),
+                cpuUsage: os.loadavg().map(num => num.toFixed(2)),
 
                 totalMemory: this.formatBytes(os.totalmem()),
                 freeMemory: this.formatBytes(os.freemem()),
@@ -74,6 +74,8 @@ class StatusTracker {
 
             // TEMP log the current system status object
             // console.log('currentSystemStatus', currentSystemStatus);
+
+            // console.log('network', currentSystemStatus.networkInterfaces);
 
             // emit an event that the current system status has been processed
             eventHub.emit('systemStatusUpdate', currentSystemStatus);
