@@ -75,7 +75,7 @@ class ConfigManager {
 			}
 
 			// actually write the config to a file
-			fs.writeFileSync('config.json', JSON.stringify(this.config, null, 2));
+			fs.writeFileSync(this.filePath, JSON.stringify(this.config, null, 2));
 
 			// log success
 			if (VERBOSE_LOGGING) {

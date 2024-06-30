@@ -9,6 +9,7 @@
 
 
 // import modules
+import fs from 'fs';
 import eventHub from './EventHub.mjs';
 import fetch from 'node-fetch';
 
@@ -23,8 +24,12 @@ import configManager from './ConfigManager.mjs';
 // const API_URL = 'http://attitudelighting.test/api/v1/device/sync'; 
 const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
 const PING_INTERVAL = 1000;  // interval in ms to ping the server
+const MAX_ERROR_COUNT = 10;
 
 const VERBOSE_LOGGING = false;
+
+const MISSED_MESSAGES_FILE_PATH = './';  // path to save the config JSON file to
+const MAX_MESSAGES_TO_RESEND_AT_ONCE = 250;
 
 
 
@@ -52,6 +57,13 @@ class NetworkModule {
 		    }
 		}
 		*/
+
+		// Init missed messages system
+		this.errorCounter = 0;
+		this.filePath = MISSED_MESSAGES_FILE_PATH + 'missedNetworkMessages.json';
+		this.loadMissedNetworkMessagesFlag = true; 
+		// this has to be true. we have to assume, upon app start, that there have been missed messages, 
+		// and that the device was power cycled or something
     }
 
 
@@ -92,6 +104,11 @@ class NetworkModule {
     	const payload = this.queue.splice(0, this.queue.length);
     	// console.log('PAYLOAD', payload);
 
+    	// if necesary, add missed messages to the queue
+    	if (this.loadMissedNetworkMessagesFlag) {
+    		this.loadMissedNetworkMessages();
+    	}
+
     	// Make a POST request to the API endpoint with the request data
 		fetch(this.url, {
 		    method: 'POST',
@@ -111,6 +128,15 @@ class NetworkModule {
 
 			// log a success message
     		logger.info(`${response.status} ${response.statusText} request successful! Connected to attitude.lighting server!`);
+
+    		// if there had previously been errors, then flag that we need to grab the missed messages out of local file storage
+    		if (this.errorCounter > MAX_ERROR_COUNT) {
+    			this.loadMissedNetworkMessagesFlag = true;
+    			logger.info('Successfully reconnected to the attitude.lighting server! Begin restoring missed network messages.');
+    		}
+
+    		// reset the error counter
+    		this.errorCounter = 0;
 
 		    // return the body text of the response
 		    return response.text();
@@ -133,9 +159,18 @@ class NetworkModule {
 			// log error to logger, which will show in console and queue log to be sent to server
     		logger.error(`Error during network request: ${error.message}`);
 
-    		// since there was an error of some sort, these messages should be added back to the queue and re-sent to server
-    		// unshift the queue by adding this payload (which failed) to the front
-    		this.queue.unshift(...payload);
+    		// add this error to the counter
+    		this.errorCounter++;
+
+    		// if error count is greater than the max, then we need to start saving the missed data to a file, 
+    		// instead of just to the queue, so that it can be re-sent later
+    		if (this.errorCounter > MAX_ERROR_COUNT) {
+    			this.savePayloadToFile(payload);
+    		} else {
+    			// otherwise, these messages should just be added back to the queue and re-sent to server.
+	    		// unshift the queue by adding this payload (which failed) to the front
+	    		this.queue.unshift(...payload);
+    		}
 		});
     }
 
@@ -189,6 +224,112 @@ class NetworkModule {
     systemStatusUpdateListener(currentSystemStatus) {
     	this.enqueueData('systemStatus', currentSystemStatus);
     }
+
+
+    // savePayloadToFile - takes the current payload and adds it to the file missedNetworkMessages.json
+    savePayloadToFile(payload) {
+    	// variable to hold the parsed data from the missed messages file
+    	let parsedData = this.loadMissedNetworkMessagesJSONFromFile();
+
+    	// collect the queueToSaveToFile: the array of the previous data in the queue, plus the new payload added at the end
+    	let queueToSaveToFile = parsedData;
+    	queueToSaveToFile.push(...payload);
+
+    	// save to file
+    	this.saveMissedNetworkMessagesJSONToFile(queueToSaveToFile);
+    }
+
+
+    // loadMissedNetworkMessages - load the messages that we missed out of the JSON and add them to the queue
+    loadMissedNetworkMessages() {
+    	// quick log that we are loading missed messages
+		logger.info('Loading missed messages from local JSON file...');
+
+    	// variable to hold the parsed data from the missed messages file
+    	let parsedData = this.loadMissedNetworkMessagesJSONFromFile();
+
+    	// if there's no data
+    	if (parsedData.length == 0) {
+    		// log that all missed messages have been resent
+    		logger.info('No missed messages left to resend!');
+
+    		// change this flag to false since we're done resending missed messages
+    		this.loadMissedNetworkMessagesFlag = false;
+
+    		return;
+    	}
+
+    	// hold the current set of items that should be added to queue
+    	let currentMessagesToResend = this.grabAndRemoveFirstItems(parsedData, MAX_MESSAGES_TO_RESEND_AT_ONCE);
+
+    	// add them to the queue
+    	this.queue.push(...currentMessagesToResend);
+
+    	// save whatever was left and can't be sent this round back to the JSON file
+    	// this might be an empty array, which is fine, because that will then ensure that we're done.
+    	this.saveMissedNetworkMessagesJSONToFile(parsedData);
+    }
+
+
+    // loadMissedNetworkMessagesJSONFromFile - actually load and process the JSON file, with appropriate error checking & logging
+    loadMissedNetworkMessagesJSONFromFile() {
+    	// variable to hold the raw data string from the missed messages file
+    	let rawData = '[]';
+
+    	// try to load the raw data as a string from the file at this path
+    	try {
+			rawData = fs.readFileSync(this.filePath);
+    	} catch (error) {
+    		// log a warning that no file was found
+    		logger.warn('No file found at ' + this.filePath + ' (error: ' + error.message + ')');
+    	}
+
+    	// variable to hold the parsed data
+    	let parsedData = [];
+
+    	// try to parse the JSON
+    	try {
+			parsedData = JSON.parse(rawData);
+    	} catch (error) {
+    		// log a warning that JSON couldnt be parsed
+    		logger.warn('Unable to parse JSON data, error: ' + error.message);
+    	}
+
+    	return parsedData;
+    }
+
+
+    // loadMissedNetworkMessagesJSONFromFile - actually load and process the JSON file, with appropriate error checking & logging
+    saveMissedNetworkMessagesJSONToFile(data) {
+    	// now try to save this to a file
+    	try {
+    		fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2));
+
+    		logger.info('Saved the current payload to the missedNetworkMessages.json file!');
+    	} catch (error) {
+    		// log a warning that the file couldn't be saved
+    		logger.error('Unable to save the network queue to a file, error: ' + error.message);
+    	}
+    }
+
+
+    // grab the first count number of items from an array
+	grabAndRemoveFirstItems(arr, count) {
+		// Handle the case where count is greater than the length of the array
+		if (count >= arr.length) {
+			const allItems = arr.slice(); // Make a copy of the array
+			arr.length = 0; // Clear the array
+			return allItems;
+		}
+
+		// Grab the first 'count' items
+		const items = arr.slice(0, count);
+
+		// Remove the first 'count' items from the array
+		arr.splice(0, count);
+
+		return items;
+	}
 }
 
 

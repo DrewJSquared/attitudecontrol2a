@@ -1048,6 +1048,13 @@
       "day": 6,
       "start": 14,
       "height": 11
+    },
+    {
+      "id": 4,
+      "eventBlockId": 1,
+      "day": 1,
+      "start": 1,
+      "height": 11
     }
   ],
   "customBlocks": [],
