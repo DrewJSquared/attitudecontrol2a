@@ -19,7 +19,7 @@ const logger = new Logger('AttitudeSACN');
 
 // ==================== VARIABLES ====================
 const DMX_INTERVAL_SPEED = 24;  // interval speed for DMX in milliseconds 
-const DEBUG_FPS = true;  // enable or disable FPS debugging
+const DEBUG_FPS = false;  // enable or disable FPS debugging
 
 
 

@@ -15,151 +15,35 @@
   "patch": {
     "zonesList": [
       {
-        "name": "Double Wide",
+        "name": "Double Wide Rope",
         "color": "blue",
-        "groups": [
-          "Group 1",
-          "Group 2",
-          "Group 3",
-          "Group 4"
-        ]
+        "groups": []
       },
       {
-        "name": "Zone 2",
+        "name": "A Second Group",
         "color": "fuchsia",
         "groups": []
-      },
-      {
-        "name": "Zone 3",
-        "color": "emerald",
-        "groups": []
-      },
-      {
-        "name": "Zone 4",
-        "color": "yellow",
-        "groups": [
-          "1",
-          "2",
-          "3 asdf",
-          "Last"
-        ]
       }
     ],
     "fixturesList": [
       {
         "id": 1,
         "type": 6,
-        "label": "DBLWD Group 1",
+        "label": "Double Wide Rope 1",
         "universe": 1,
         "startAddress": 1,
         "zoneNumber": 1,
-        "groupNumber": 1,
-        "quantity": 20,
-        "highlight": false
-      },
-      {
-        "id": 9,
-        "type": 6,
-        "label": "DBLWD Group 2",
-        "universe": 1,
-        "startAddress": 81,
-        "zoneNumber": 1,
-        "groupNumber": 2,
-        "quantity": 20,
-        "highlight": false
-      },
-      {
-        "id": 10,
-        "type": 6,
-        "label": "DBLWD Group 3",
-        "universe": 1,
-        "startAddress": 161,
-        "zoneNumber": "1",
-        "groupNumber": "3",
-        "quantity": 20,
-        "highlight": false
-      },
-      {
-        "id": 11,
-        "type": 6,
-        "label": "DBLWD Group 4",
-        "universe": 1,
-        "startAddress": 241,
-        "zoneNumber": "1",
-        "groupNumber": "4",
-        "quantity": 20,
-        "highlight": false
+        "groupNumber": 0,
+        "quantity": 80
       },
       {
         "id": 2,
-        "type": 6,
-        "label": "Double Wide Tape",
-        "universe": 2,
-        "startAddress": 1,
-        "zoneNumber": 4,
-        "groupNumber": 1,
-        "quantity": 15,
-        "highlight": false
-      },
-      {
-        "id": 5,
         "type": 4,
-        "label": "Mag",
+        "label": "Tube 1",
         "universe": 2,
-        "startAddress": 61,
-        "zoneNumber": 4,
-        "groupNumber": 2,
-        "highlight": false
-      },
-      {
-        "id": 6,
-        "type": 6,
-        "label": "Last",
-        "universe": 2,
-        "startAddress": 149,
-        "zoneNumber": 4,
-        "groupNumber": 3,
-        "quantity": 30
-      },
-      {
-        "id": 7,
-        "type": 6,
-        "label": "Last",
-        "universe": 2,
-        "startAddress": 269,
-        "zoneNumber": 4,
-        "groupNumber": 4,
-        "quantity": 15
-      },
-      {
-        "id": 3,
-        "type": 6,
-        "label": "Double Wide Tape",
-        "universe": 3,
         "startAddress": 1,
-        "zoneNumber": 3,
-        "groupNumber": 0,
-        "quantity": 82
-      },
-      {
-        "id": 4,
-        "type": 6,
-        "label": "Double Wide Tape",
-        "universe": 5,
-        "startAddress": 1,
-        "zoneNumber": 2,
-        "groupNumber": 0,
-        "quantity": 82
-      },
-      {
-        "id": 8,
-        "type": 6,
-        "label": "rope",
-        "universe": 5,
-        "startAddress": 329,
-        "zoneNumber": 4,
-        "groupNumber": 4,
-        "quantity": 20
+        "zoneNumber": "2",
+        "groupNumber": "0"
       }
     ]
   },
@@ -1041,195 +925,103 @@
         ]
       ],
       "name": "** BETA SHOW use for the beta editor"
+    },
+    {
+      "id": 382,
+      "type": 4,
+      "direction": 0,
+      "speed": 49,
+      "size": 18,
+      "pause": 0,
+      "splits": 1,
+      "colorsList": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          255,
+          255
+        ],
+        [
+          0,
+          0,
+          255
+        ]
+      ],
+      "name": "4th of July"
+    },
+    {
+      "id": 389,
+      "engineVersion": "2A",
+      "showType": "Chase",
+      "direction": "Ends to Middle",
+      "speed": 60,
+      "size": 53,
+      "splits": 2,
+      "transition": "Both Edges",
+      "transitionWidth": 0.65,
+      "bounce": false,
+      "colors": [
+        {
+          "red": 134,
+          "green": 80,
+          "blue": 80
+        },
+        {
+          "red": 0,
+          "green": 107,
+          "blue": 0
+        },
+        {
+          "red": 94,
+          "green": 0,
+          "blue": 128
+        }
+      ],
+      "name": "Engine V2.A Demo Show"
+    },
+    {
+      "id": 392,
+      "engineVersion": "2A",
+      "showType": "Chase",
+      "direction": "Left to Right",
+      "speed": 80,
+      "size": 25,
+      "splits": 5,
+      "transition": "Both Edges",
+      "transitionWidth": 0.5,
+      "bounce": false,
+      "colors": [
+        {
+          "red": 255,
+          "green": 0,
+          "blue": 0
+        },
+        {
+          "red": 255,
+          "green": 255,
+          "blue": 255
+        },
+        {
+          "red": 0,
+          "green": 0,
+          "blue": 255
+        }
+      ],
+      "name": "New Engine New Show"
     }
   ],
   "eventBlocks": [
     {
       "id": 1,
-      "name": "Rainbow Wave",
+      "name": "New Engine",
       "color": "amber",
       "showdata": [
-        103,
-        103,
-        103,
-        103,
         0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "RND Rainbow Wave"
-    },
-    {
-      "id": 2,
-      "name": "Split By Groups",
-      "color": "blue",
-      "showdata": [
-        [
-          2,
-          13,
-          9,
-          25
-        ],
-        9,
-        9,
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "Red White Blue SHOW 2, Drew Example Show, Rainbow Wave Works, Cyan Pink Orange Chase, RND SHOW 1"
-    },
-    {
-      "id": 3,
-      "name": "Split",
-      "color": "fuchsia",
-      "showdata": [
-        9,
-        2,
-        14,
-        14,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "Rainbow Wave Works, Red White Blue SHOW 2, RND RGB Chase"
-    },
-    {
-      "id": 4,
-      "name": "red white blue",
-      "color": "emerald",
-      "showdata": [
-        2,
-        2,
-        2,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "Red White Blue SHOW 2"
-    },
-    {
-      "id": 5,
-      "name": "sydney",
-      "color": "orange",
-      "showdata": [
-        29,
-        29,
-        29,
-        29
-      ],
-      "showstext": "asdfasdfasdf"
-    },
-    {
-      "id": 6,
-      "name": "white",
-      "color": "red",
-      "showdata": [
-        43,
-        24,
-        43,
-        43,
-        43,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "Red White Blue Chase, R&amp;D Test"
-    },
-    {
-      "id": 7,
-      "name": "COLOR TESTER",
-      "color": "sky",
-      "showdata": [
-        42,
-        35,
-        42,
-        35,
-        42,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "COLOR TEST, color"
-    },
-    {
-      "id": 8,
-      "name": "rainbow slow",
-      "color": "lime",
-      "showdata": [
-        45,
-        45,
-        45,
-        45,
-        45,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "rainbow SLOW test"
-    },
-    {
-      "id": 9,
-      "name": "FX tester",
-      "color": "violet",
-      "showdata": [
-        184,
-        184,
-        184,
-        184,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "drew FX tester"
-    },
-    {
-      "id": 10,
-      "name": "inactive tester",
-      "color": "violet",
-      "showdata": [
-        0,
-        146,
-        35,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "White, color"
-    },
-    {
-      "id": 11,
-      "name": "this shoudl crash it",
-      "color": "red",
-      "showdata": [
-        190,
-        0,
+        392,
         0,
         0,
         0,
@@ -1239,275 +1031,26 @@
         0,
         0
       ],
-      "showstext": "show im about to delete, "
-    },
-    {
-      "id": 12,
-      "name": "zachs",
-      "color": "sky",
-      "showdata": [
-        [
-          206,
-          206,
-          281,
-          281
-        ],
-        0,
-        28,
-        146,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "Blue, Zach&#039;s, Logan&#039;s Nature Show, White 100%"
+      "showstext": "New Engine New Show"
     }
   ],
   "scheduleBlocks": [
     {
-      "id": 3,
+      "id": 2,
       "eventBlockId": 1,
-      "day": 4,
-      "start": 13,
-      "height": 12
-    },
-    {
-      "id": 4,
-      "eventBlockId": 2,
-      "day": 5,
-      "start": 1,
-      "height": 8
-    },
-    {
-      "id": 6,
-      "eventBlockId": 2,
-      "day": 4,
-      "start": 4,
-      "height": 6
-    },
-    {
-      "id": 8,
-      "eventBlockId": 3,
-      "day": 1,
-      "start": 12,
-      "height": 2
-    },
-    {
-      "id": 12,
-      "eventBlockId": 3,
-      "day": 3,
-      "start": 1,
-      "height": 4
-    },
-    {
-      "id": 13,
-      "eventBlockId": 1,
-      "day": 6,
-      "start": 1,
-      "height": 2
-    },
-    {
-      "id": 15,
-      "eventBlockId": 1,
-      "day": 6,
-      "start": 1,
-      "height": 2
-    },
-    {
-      "id": 16,
-      "eventBlockId": 5,
-      "day": 3,
-      "start": 6,
-      "height": 12
-    },
-    {
-      "id": 17,
-      "eventBlockId": 3,
-      "day": 4,
-      "start": 1,
-      "height": 3
-    },
-    {
-      "id": 22,
-      "eventBlockId": 6,
-      "day": 2,
-      "start": 1,
-      "height": 10
-    },
-    {
-      "id": 29,
-      "eventBlockId": 2,
-      "day": 2,
-      "start": 11,
-      "height": 4
-    },
-    {
-      "id": 32,
-      "eventBlockId": 8,
-      "day": 3,
-      "start": 18,
-      "height": 7
-    },
-    {
-      "id": 33,
-      "eventBlockId": 1,
-      "day": 1,
+      "day": 7,
       "start": 14,
       "height": 11
     },
     {
-      "id": 35,
-      "eventBlockId": 6,
-      "day": 1,
-      "start": 4,
-      "height": 8
-    },
-    {
-      "id": 39,
-      "eventBlockId": 10,
-      "day": 5,
-      "start": 11,
-      "height": 8
-    },
-    {
-      "id": 41,
-      "eventBlockId": 11,
-      "day": 7,
-      "start": 4,
-      "height": 3
-    },
-    {
-      "id": 42,
-      "eventBlockId": 4,
-      "day": 7,
-      "start": 19,
-      "height": 6
-    },
-    {
-      "id": 43,
-      "eventBlockId": 1,
-      "day": 7,
-      "start": 7,
-      "height": 12
-    },
-    {
-      "id": 44,
-      "eventBlockId": 1,
-      "day": 2,
-      "start": 15,
-      "height": 10
-    },
-    {
-      "id": 45,
-      "eventBlockId": 1,
-      "day": 5,
-      "start": 19,
-      "height": 6
-    },
-    {
-      "id": 46,
-      "eventBlockId": 12,
-      "day": 1,
-      "start": 1,
-      "height": 3
-    },
-    {
-      "id": 47,
-      "eventBlockId": 12,
-      "day": 4,
-      "start": 10,
-      "height": 1
-    },
-    {
-      "id": 48,
-      "eventBlockId": 12,
-      "day": 5,
-      "start": 10,
-      "height": 1
-    },
-    {
-      "id": 49,
-      "eventBlockId": 12,
-      "day": 6,
-      "start": 3,
-      "height": 6
-    },
-    {
-      "id": 50,
-      "eventBlockId": 12,
-      "day": 7,
-      "start": 1,
-      "height": 3
-    },
-    {
-      "id": 51,
+      "id": 3,
       "eventBlockId": 1,
       "day": 6,
-      "start": 9,
-      "height": 16
+      "start": 14,
+      "height": 11
     }
   ],
-  "customBlocks": [
-    {
-      "id": 1,
-      "name": "New Firmware Custom Test",
-      "color": "amber",
-      "showdata": [
-        146,
-        0,
-        0,
-        45,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "White 100%, rainbow SLOW test",
-      "startMonth": 6,
-      "startDay": 2,
-      "endMonth": 7,
-      "endDay": 3,
-      "startHour": 23,
-      "startMinute": 0,
-      "endHour": 23,
-      "endMinute": 59
-    },
-    {
-      "id": 2,
-      "name": "Another custom block at same time",
-      "color": "blue",
-      "showdata": [
-        [
-          0,
-          0,
-          0,
-          135
-        ],
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "showstext": "WiFi Demo Show",
-      "startMonth": 1,
-      "startDay": 1,
-      "endMonth": 9,
-      "endDay": 1,
-      "startHour": 1,
-      "startMinute": 1,
-      "endHour": 23,
-      "endMinute": 56
-    }
-  ],
+  "customBlocks": [],
   "fixtureTypes": [
     {
       "id": 1,
@@ -1611,49 +1154,28 @@
     }
   ],
   "senses": [],
-  "overrides": [
-    {
-      "id": 1,
-      "name": "RGB & RWB",
-      "showsdata": "[[14,0,0,43],14,14,14,0,0,0,0,0,0]"
-    },
-    {
-      "id": 2,
-      "name": "White a little",
-      "showsdata": "[[0,0,146,0],0,146,146,0,0,0,0,0,0]"
-    },
-    {
-      "id": 38,
-      "name": "ALL WHITE",
-      "showsdata": "[146,146,146,146,0,0,0,0,0,0]"
-    },
-    {
-      "id": 39,
-      "name": "Transparent",
-      "showsdata": "[206,0,0,0,0,0,0,0,0,0]"
-    }
-  ],
+  "overrides": [],
   "webOverrides": [
     {
-      "id": 11,
-      "name": "White 15 mins",
-      "override_id": 38,
+      "id": 366,
+      "name": "Web Override #1",
+      "override_id": 0,
       "active": false,
       "mode": "Pulse",
-      "time": "15",
-      "timemode": "min"
+      "time": "1",
+      "timemode": "hour"
     },
     {
-      "id": 12,
-      "name": "RGB &amp; RWB",
-      "override_id": 1,
+      "id": 367,
+      "name": "Web Override #2",
+      "override_id": 0,
       "active": false,
       "mode": "Pulse",
-      "time": "5",
-      "timemode": "sec"
+      "time": "1",
+      "timemode": "hour"
     },
     {
-      "id": 13,
+      "id": 368,
       "name": "Web Override #3",
       "override_id": 0,
       "active": false,
@@ -1662,22 +1184,22 @@
       "timemode": "hour"
     },
     {
-      "id": 14,
-      "name": "Blue 2hour",
-      "override_id": 39,
+      "id": 369,
+      "name": "Web Override #4",
+      "override_id": 0,
       "active": false,
       "mode": "Pulse",
-      "time": "2",
+      "time": "1",
       "timemode": "hour"
     },
     {
-      "id": 15,
-      "name": "Transparent Blue",
-      "override_id": 39,
+      "id": 370,
+      "name": "Web Override #5",
+      "override_id": 0,
       "active": false,
       "mode": "Pulse",
-      "time": "15",
-      "timemode": "sec"
+      "time": "1",
+      "timemode": "hour"
     }
   ]
 }

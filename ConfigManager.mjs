@@ -19,6 +19,7 @@ const logger = new Logger('ConfigManager');
 
 // variables
 const CONFIG_FILE_PATH = './';  // path to save the config JSON file to
+const VERBOSE_LOGGING = false;
 
 
 
@@ -69,13 +70,17 @@ class ConfigManager {
 		// try to save the config to a file
 		try {
 			// log that we're trying
-			logger.info('Saving configuration to file...');
+			if (VERBOSE_LOGGING) {
+				logger.info('Saving configuration to file...');
+			}
 
 			// actually write the config to a file
 			fs.writeFileSync('config.json', JSON.stringify(this.config, null, 2));
 
 			// log success
-			logger.info('Configuration saved successfully.');
+			if (VERBOSE_LOGGING) {
+				logger.info('Configuration saved successfully.');
+			}
 		} catch (error) {
 			// log the error
 			logger.error(`Error saving configuration: ${error.message}`);
@@ -88,16 +93,23 @@ class ConfigManager {
 		// try to update the config with the new data, else log a failure
 		try {
 			// log that we're updating the config
-			logger.info('Updating configuration with new data...');
+			if (VERBOSE_LOGGING) {
+				logger.info('Updating configuration with new data...');
+			}
 
 			// set this.config to the merged objects: this.config (original) and newData (new)
 			this.config = this.mergeObjects(this.config, newData);
 
 			// log success message
-			logger.info('Successfully updated configuration!');
+			if (VERBOSE_LOGGING) {
+				logger.info('Successfully updated configuration!');
+			}
 
 			// save to file
 			this.saveToFile();
+
+			// log that we updated & saved
+			logger.info('Successfully updated and saved configuration!');
 		} catch (error) {
 			// log the error
 			logger.error(`Error updating configuration: ${error.message}`);

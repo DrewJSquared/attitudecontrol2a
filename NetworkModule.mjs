@@ -24,6 +24,8 @@ import configManager from './ConfigManager.mjs';
 const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
 const PING_INTERVAL = 1000;  // interval in ms to ping the server
 
+const VERBOSE_LOGGING = false;
+
 
 
 // Define the NetworkModule class to handle network communication
@@ -143,7 +145,9 @@ class NetworkModule {
     	// wrap this logic in a try/catch, so that errors here will be caught instead of causing us to resend data in the fetch function
     	try {
     		// actually process the response data from the server here
-    		logger.info('Processing response data from server...');
+    		if (VERBOSE_LOGGING) {
+    			logger.info('Processing response data from server...');
+    		}
 
     		// JSON parse the raw data from the server
     		let data = JSON.parse(rawData);
@@ -152,7 +156,9 @@ class NetworkModule {
     		configManager.update(data);
 
     		// log success
-    		logger.info('Successfully processed response data from server!');
+    		if (VERBOSE_LOGGING) {
+    			logger.info('Successfully processed response data from server!');
+    		}
     	} catch (error) {
 			// log error to logger, which will show in console and queue log to be sent to server
     		logger.error(`Error during response handling: ${error.message}`);

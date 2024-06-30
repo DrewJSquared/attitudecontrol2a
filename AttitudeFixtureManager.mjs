@@ -26,7 +26,7 @@ import { TRANSITIONS } from './Transitions.js';
 
 
 // ==================== VARIABLES ====================
-const DMX_FRAME_INTERVAL = 1000;  // interval speed in milliseconds for each DMX frame (should be 25ms)
+const DMX_FRAME_INTERVAL = 25;  // interval speed in milliseconds for each DMX frame (should be 25ms)
 
 
 
@@ -68,7 +68,7 @@ class AttitudeFixtureManager {
     	// try to process fixtures
     	try {
     		// temp
-        	logger.info('Processing fixtures/shows/schedule...');
+        	// logger.info('Processing fixtures/shows/schedule...');
 
     		// get fixtures/zones/shows configManager and schedule from attitudeScheduler
         	this.getConfigration();
@@ -86,7 +86,7 @@ class AttitudeFixtureManager {
         	this.processPatchAndOutputShows();
 
     		// temp
-        	logger.info('Successfully finished processing fixtures/shows/schedule and output data to sACN!');
+        	// logger.info('Successfully finished processing fixtures/shows/schedule and output data to sACN!');
     	} catch (error) {
     		// else log error
             logger.error(`Error processing fixtures: ${error}`);
@@ -135,8 +135,8 @@ class AttitudeFixtureManager {
 
 								// grab the fixtures for this show
 								// make sure to always return an array of items using Array.of and spread syntax
-								let fixturesForThisShow = Array.of(...this.fixtures.filter(item => item.zoneNumber === (index + 1)
-																 && item.groupNumber === (groupIndex + 1)));
+								let fixturesForThisShow = Array.of(...this.fixtures.filter(item => item.zoneNumber == (index + 1)
+																 && item.groupNumber == (groupIndex + 1)));
 
 								// apply this show ID to these fixtures
 								this.applyShowToFixtures(currentGroupShowId, fixturesForThisShow);
@@ -152,7 +152,7 @@ class AttitudeFixtureManager {
 				} else {
 					// otherwise no groups in this zone, so all fixtures tied to this zone should be used
 					// make sure to always return an array of items using Array.of and spread syntax
-					let fixturesForThisShow = Array.of(...this.fixtures.filter(itm => itm.zoneNumber === (index + 1)));
+					let fixturesForThisShow = Array.of(...this.fixtures.filter(itm => itm.zoneNumber == (index + 1)));
 
 					// apply this show ID to these fixtures
 					this.applyShowToFixtures(currentZoneSchedule, fixturesForThisShow);
@@ -171,6 +171,8 @@ class AttitudeFixtureManager {
 
 	// applyShowToFixtures - given a show ID and array of fixtures, apply the show to the fixtures
 	applyShowToFixtures(showId, fixtures) {
+		// console.log(showId);
+
 		// validate fixtures
 		if (fixtures == undefined || fixtures.length == undefined) {
 			throw new Error('Fixtures or fixtures length is undefined!');
@@ -186,21 +188,33 @@ class AttitudeFixtureManager {
 	    let engineInstance = this.engineInstances.find(itm => itm.showId === showId);
 
 	    // check if it's undefined
-	    if (engineInstance == undefined) {
+	    if (engineInstance == undefined && !(showId == 0)) {
 	    	throw new Error(`Unable to find an engne instance for show id ${showId}!`);
 	    }
 
 	    // calculate all fixture segments (handling single, multicount, and segmented fixtures)
 	    let fixtureSegments = this.calculateAllFixtureSegments(fixtures);
 
-	    // set the number of total segments to calculate for
-	    engineInstance.engine.setFixtureCount(fixtureSegments.length);
+	    // set the number of total segments to calculate for,
+	    // as long as the show id is not zero. If it's zero, we're just outputting black to all anyway.
+	    if (!(showId == 0)) {
+		    engineInstance.engine.setFixtureCount(fixtureSegments.length);
+		}
 
 	    // now try to apply this show to the fixtures by iterating over each
 		fixtureSegments.forEach((fixtureSegment, index) => {
 			try {
-				// variable to hold the color for this fixture
-				let thisFixtureColor = engineInstance.engine.getFixtureColor(index);
+				// variable to hold the color for this fixture (default to black)
+				let thisFixtureColor = {
+					red: 0,
+					green: 0,
+					blue: 0,
+				}
+
+				if (!(showId == 0)) {
+					// if the current show id isn't zero, then get the color corresponding to this pixel
+					thisFixtureColor = engineInstance.engine.getFixtureColor(index);
+				}
 
 				// check color type & output DMX values
 				if (fixtureSegment.colorMode == 'RGB') {
@@ -220,7 +234,7 @@ class AttitudeFixtureManager {
 					throw new Error(`Unknown fixture color mode ${fixtureSegment.colorMode}`);
 				}
 			} catch (error) {
-				logger.error(`Error while applying show ${showId} to fixture ${fixture.name}: ${error.message}`);
+				logger.error(`Error while applying show ${showId} to fixture index ${index}: ${error.message}`);
 			}
 		});
 	}
@@ -290,11 +304,11 @@ class AttitudeFixtureManager {
 
 		    // check if this show is compatible with the current engine
 		    if (show.engineVersion == '2A') {
-		    	logger.info(`Show ${show.name} IS compatible with the new engine! Updating config now...`);
+		    	// logger.info(`Show ${show.name} IS compatible with the new engine! Updating config now...`);
 
 		    	// if so, update the parameters on the engine to match the show
 	            engineInstance.engine.configure({
-		            showType: show.type,
+		            showType: show.showType,
 		            direction: show.direction,
 		            speed: show.speed,
 		            size: show.size,
