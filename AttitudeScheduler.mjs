@@ -176,17 +176,28 @@ class AttitudeScheduler {
 		        block.start - 1 + block.height > this.now.hour
 		    );
 
-		    // find the actual event block from the ID referenced in current schedule block
-		    const eventBlock = this.eventBlocks.find(itm => itm.id === currentScheduleBlock.eventBlockId);
+		    // if undefined, that means there's no block on the schedule grid for this point in time
+		    if (currentScheduleBlock == undefined) {
+		    	// log (optional)
+			    if (LOG_INDIVIDUAL_SCHEDULE_LEVELS) {
+			    	logger.info('No block assigned to this point in time on the default weekly schedule grid.');
+			    }
 
-		    // if a block was found, then pull the showdata out and map it to the defaultWeeklySchedule
-		    if (eventBlock) {
-		        this.processedShowIds.defaultWeeklySchedule = [...eventBlock.showdata];
+		    	// in this case we just need zeroes
+            	this.processedShowIds.defaultWeeklySchedule = new Array(MAX_ZONES_COUNT).fill(0);
+		    } else {
+			    // find the actual event block from the ID referenced in current schedule block
+			    const eventBlock = this.eventBlocks.find(itm => itm.id === currentScheduleBlock.eventBlockId);
 
-		        // Fill remaining spots with 0 if necessary
-		        while (this.processedShowIds.defaultWeeklySchedule.length < MAX_ZONES_COUNT) {
-		            this.processedShowIds.defaultWeeklySchedule.push(0);
-		        }
+			    // if a block was found, then pull the showdata out and map it to the defaultWeeklySchedule
+			    if (eventBlock) {
+			        this.processedShowIds.defaultWeeklySchedule = [...eventBlock.showdata];
+
+			        // Fill remaining spots with 0 if necessary
+			        while (this.processedShowIds.defaultWeeklySchedule.length < MAX_ZONES_COUNT) {
+			            this.processedShowIds.defaultWeeklySchedule.push(0);
+			        }
+			    }
 		    }
 
 		    // log that we finished (optional)
