@@ -71,6 +71,13 @@ class AttitudeScheduler {
         }, PROCESS_SCHEDULE_INTERVAL);
 
         logger.info('Initialized the scheduler and started the processSchedule interval!');
+
+		// emit an event that we initialized the scheduler
+        eventHub.emit('moduleStatus', { 
+            name: 'AttitudeScheduler', 
+            status: 'operational',
+            data: '[]',
+        });
     }
 
 
@@ -95,11 +102,23 @@ class AttitudeScheduler {
 
     		// log the final output schedule
     		logger.info('Processed schedule and determined final show ids: ' + JSON.stringify(this.processedShowIds?.final));
+
+			// emit an event that we properly processed the schedule
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeScheduler', 
+	            status: 'operational',
+	            data: JSON.stringify(this.processedShowIds?.final),
+	        });
     	} catch (error) {
     		// else log error
             logger.error(`Error processing schedule: ${error}`);
 
-            // TODO note error here and maybe fire an event? force us to go to white backup mode?
+			// emit an event that there was an error!
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeScheduler', 
+	            status: 'errored',
+	            data: `Error processing schedule: ${error}`,
+	        });
         }
     }
 
@@ -121,6 +140,13 @@ class AttitudeScheduler {
 	    } catch (error) {
 	    	// log the error to logger
 	        logger.error(`Error accessing this.processedShowIds.final: ${error.message}`);
+
+			// emit an event that there was an error!
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeScheduler', 
+	            status: 'errored',
+	            data: `Error accessing this.processedShowIds.final: ${error.message}`,
+	        });
 
 	        // return default (an array of zeroes)
 	        return new Array(MAX_ZONES_COUNT).fill(0);
@@ -161,7 +187,7 @@ class AttitudeScheduler {
 		this.now.minute = rezoned.minute;
 
 		// log the current time
-		logger.info(`Current time in ${this.timezoneString} is ${this.currentTimestamp.toFormat("ccc LLL d yyyy H:mm:ss 'GMT'ZZ (ZZZZZ)")}`);
+		logger.info(`Current time in ${this.timezoneString} is ${this.currentTimestamp.toFormat("ccc LLL d yyyy H:mm:ss 'GMT'ZZ (ZZZZ)")}`);
 	}
 
 
@@ -207,6 +233,14 @@ class AttitudeScheduler {
     	} catch (error) {
     		// else log error
             logger.error(`Error processing weekly schedule: ${error}`);
+
+			// emit an event that there was an error
+			// note that since this error only applies to processing the weekly schedule, we're only in a degraded state, not full failure
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeScheduler', 
+	            status: 'degraded',
+	            data: `Error processing weekly schedule: ${error.message}`,
+	        });
 
             // default array to zeroes, which will make this part of the schedule processing transparent
             this.processedShowIds.defaultWeeklySchedule = new Array(MAX_ZONES_COUNT).fill(0);
@@ -281,6 +315,13 @@ class AttitudeScheduler {
     		// else log error
             logger.error(`Error processing custom schedule blocks: ${error}`);
 
+			// emit an event that there was an error!
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeScheduler', 
+	            status: 'degraded',
+	            data: `Error processing custom schedule blocks: ${error.message}`,
+	        });
+
             // default array to zeroes, which will make this part of the schedule processing transparent
             this.processedShowIds.customScheduleBlocks = new Array(MAX_ZONES_COUNT).fill(0);
     	}
@@ -302,6 +343,13 @@ class AttitudeScheduler {
     	} catch (error) {
     		// else log error
             logger.error(`Error processing external overrides: ${error}`);
+
+			// emit an event that there was an error!
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeScheduler', 
+	            status: 'degraded',
+	            data: `Error processing external overrides: ${error.message}`,
+	        });
 
             // default array to zeroes, which will make this part of the schedule processing transparent
             this.processedShowIds.overrides = new Array(MAX_ZONES_COUNT).fill(0);
@@ -345,6 +393,13 @@ class AttitudeScheduler {
     	} catch (error) {
     		// else log error
             logger.error(`Error processing web overrides: ${error}`);
+
+			// emit an event that there was an error!
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeScheduler', 
+	            status: 'degraded',
+	            data: `Error processing web overrides: ${error.message}`,
+	        });
 
             // default array to zeroes, which will make this part of the schedule processing transparent
             this.processedShowIds.webOverrides = new Array(MAX_ZONES_COUNT).fill(0);

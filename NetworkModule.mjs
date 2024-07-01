@@ -17,6 +17,7 @@ import Logger from './Logger.mjs';
 const logger = new Logger('NetworkModule');
 
 import configManager from './ConfigManager.mjs';
+import idManager from './IdManager.mjs';
 
 
 
@@ -72,12 +73,20 @@ class NetworkModule {
     	// log the initialization
     	logger.info('Initializing network module...');
 
+    	// emit initializing event
+    	eventHub.emit('moduleStatus', { 
+			name: 'NetworkModule', 
+			status: 'initializing',
+			data: '',
+		});
+
         // start the interval for sending network requests
         this.startInterval();
 
         // bind event listeners for logging and status updates
         eventHub.on('log', this.logListener.bind(this));
         eventHub.on('systemStatusUpdate', this.systemStatusUpdateListener.bind(this));
+        eventHub.on('moduleStatusUpdate', this.moduleStatusUpdateListener.bind(this));
 
     	// log the initialization
     	logger.info('Network module initialization complete!');
@@ -109,13 +118,20 @@ class NetworkModule {
     		this.loadMissedNetworkMessages();
     	}
 
+    	// create an object for the actual request
+    	const requestObject = {
+    		device_id: idManager.getId(),
+    		serialnumber: idManager.getSerialNumber(),
+    		payload: payload,
+    	};
+
     	// Make a POST request to the API endpoint with the request data
 		fetch(this.url, {
 		    method: 'POST',
 		    headers: {
 		        'Content-Type': 'application/json', // Set the Content-Type header to indicate JSON data
 		    },
-		    body: JSON.stringify(payload), // Convert the payload JSON to a string and set as the request body
+		    body: JSON.stringify(requestObject), // Convert the request object to a JSON string and set as the request body
 		})
 
 		// handle the response asynchronously
@@ -133,6 +149,20 @@ class NetworkModule {
     		if (this.errorCounter > MAX_ERROR_COUNT) {
     			this.loadMissedNetworkMessagesFlag = true;
     			logger.info('Successfully reconnected to the attitude.lighting server! Begin restoring missed network messages.');
+
+    			// emit a moduleStatus event since we just reconnected
+	    		eventHub.emit('moduleStatus', { 
+	    			name: 'NetworkModule', 
+	    			status: 'reconnected',
+	    			data: '',
+	    		});
+    		} else {
+    			// otherwise, we've been online, so emit a moduleStatus event that we are online
+	    		eventHub.emit('moduleStatus', { 
+	    			name: 'NetworkModule', 
+	    			status: 'online',
+	    			data: '',
+	    		});
     		}
 
     		// reset the error counter
@@ -158,6 +188,13 @@ class NetworkModule {
 		.catch(error => {
 			// log error to logger, which will show in console and queue log to be sent to server
     		logger.error(`Error during network request: ${error.message}`);
+
+			// emit an event because we are currently offline
+    		eventHub.emit('moduleStatus', { 
+    			name: 'NetworkModule', 
+    			status: 'offline',
+    			data: `Error during network request: ${error.message}`,
+    		});
 
     		// add this error to the counter
     		this.errorCounter++;
@@ -197,6 +234,13 @@ class NetworkModule {
     	} catch (error) {
 			// log error to logger, which will show in console and queue log to be sent to server
     		logger.error(`Error during response handling: ${error.message}`);
+
+			// emit an event because we had an error handling this response
+    		eventHub.emit('moduleStatus', { 
+    			name: 'NetworkModule', 
+    			status: 'errored',
+    			data: `Error during response handling: ${error.message}`,
+    		});
     	}
     }
 
@@ -223,6 +267,12 @@ class NetworkModule {
     // systemStatusUpdateListener for systemStatus updated events
     systemStatusUpdateListener(currentSystemStatus) {
     	this.enqueueData('systemStatus', currentSystemStatus);
+    }
+
+
+    // moduleStatusUpdateListener for moduleStatus updated events
+    moduleStatusUpdateListener(currentModuleStatus) {
+    	this.enqueueData('moduleStatus', currentModuleStatus);
     }
 
 

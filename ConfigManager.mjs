@@ -56,11 +56,24 @@ class ConfigManager {
 			// log success
 			logger.info('Successfully loaded configuration data from local JSON file!');
 
-			// log config to console for debugging
-			// console.log(this.config);
+			// emit an event that we succesfully loaded the config (note that this is a oneTimeEvent)
+            eventHub.emit('moduleStatus', { 
+                name: 'ConfigManager', 
+                status: 'operational',
+                data: 'Successfully loaded configuration data from local JSON file!',
+                oneTimeEvent: true,
+            });
 		} catch (error) {
 			// log the error
 			logger.error(`Error loading configuration: ${error.message}`);
+
+			// emit an event that there was an error (note that this is a one time event)
+            eventHub.emit('moduleStatus', { 
+                name: 'ConfigManager', 
+                status: 'errored',
+                data: `Error loading configuration: ${error.message}`,
+                oneTimeEvent: true,
+            });
 		}
 	}
 
@@ -81,9 +94,25 @@ class ConfigManager {
 			if (VERBOSE_LOGGING) {
 				logger.info('Configuration saved successfully.');
 			}
+
+			// emit an event that we succesfully saved the config (note that this is a oneTimeEvent)
+            eventHub.emit('moduleStatus', { 
+                name: 'ConfigManager', 
+                status: 'operational',
+                data: 'Successfully saved configuration data to local JSON file!',
+                oneTimeEvent: true,
+            });
 		} catch (error) {
 			// log the error
 			logger.error(`Error saving configuration: ${error.message}`);
+
+			// emit an event that there was an error (note that this is a one time event)
+            eventHub.emit('moduleStatus', { 
+                name: 'ConfigManager', 
+                status: 'errored',
+                data: `Error saving configuration: ${error.message}`,
+                oneTimeEvent: true,
+            });
 		}
 	}
 
@@ -105,6 +134,14 @@ class ConfigManager {
 				logger.info('Successfully updated configuration!');
 			}
 
+			// emit an event we successfully updated config
+            eventHub.emit('moduleStatus', { 
+                name: 'ConfigManager', 
+                status: 'operational',
+                data: `Successfully updated configuration.`,
+                oneTimeEvent: true,
+            });
+
 			// save to file
 			this.saveToFile();
 
@@ -113,6 +150,14 @@ class ConfigManager {
 		} catch (error) {
 			// log the error
 			logger.error(`Error updating configuration: ${error.message}`);
+
+			// emit an event that there was an error (note that this is a one time event)
+            eventHub.emit('moduleStatus', { 
+                name: 'ConfigManager', 
+                status: 'errored',
+                data: `Error updating configuration: ${error.message}`,
+                oneTimeEvent: true,
+            });
 		}
 	}
 
@@ -141,7 +186,13 @@ class ConfigManager {
 
         // if undefined then log that we have an error and return empty array
         if (data === undefined) {
-            logger.error(`Error accessing fixturesList! Invalid or undefined config.patch!`);
+        	// only log error if this.config is actually defined. otherwise, we just haven't gotten any config data yet
+        	if (!Object.keys(this.config).length === 0) {
+        		logger.error(`Error accessing fixturesList! Invalid or undefined config.patch!`);
+        	}
+
+        	// TODO either way, emit an error to the module status tracker
+
             return [];
         }
 

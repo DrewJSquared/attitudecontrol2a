@@ -59,6 +59,13 @@ class AttitudeFixtureManager {
 
         // log succcess message
         logger.info('Initialized the fixture manager and started the process fixtures interval!');
+
+		// emit an event that we initialized the fixture manager
+        eventHub.emit('moduleStatus', { 
+            name: 'AttitudeFixtureManager', 
+            status: 'operational',
+            data: '',
+        });
     }
 
 
@@ -85,13 +92,25 @@ class AttitudeFixtureManager {
         	// process the patch and schedule, then grab the output data from the engine and apply it to DMX
         	this.processPatchAndOutputShows();
 
-    		// temp
+    		// log (optional)
         	// logger.info('Successfully finished processing fixtures/shows/schedule and output data to sACN!');
+
+			// emit an event that we successfully processed everything
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeFixtureManager', 
+	            status: 'operational',
+	            data: 'Processed fixtures/shows/schedule and sent DMX to AttitudeSACN module!',
+	        });
     	} catch (error) {
     		// else log error
             logger.error(`Error processing fixtures: ${error}`);
 
-            // TODO note error here and maybe fire an event? force us to go to white backup mode?
+			// emit an event that we had an error
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeFixtureManager', 
+	            status: 'errored',
+	            data: `Error processing fixtures: ${error}`,
+	        });
         }
     }
 
@@ -103,12 +122,6 @@ class AttitudeFixtureManager {
 		this.fixtures = configManager.getFixtures();
 		this.shows = configManager.getShows();
 		this.schedule = attitudeScheduler.getFinalSchedule();
-
-		// log items to console for debugging
-		// console.log('zones', this.zones);
-		// console.log('fixtures', this.fixtures);
-		// console.log('shows', this.shows);
-		// console.log('schedule', this.schedule);
 	}
 
 
@@ -143,6 +156,13 @@ class AttitudeFixtureManager {
 							} catch (error) {
 								// log the error while processing this group
 								logger.error(`Error while processing zone ${index+1} group ${groupIndex+1}: ${error.message}`);
+
+								// emit an event that we had an error (degraded state only)
+						        eventHub.emit('moduleStatus', { 
+						            name: 'AttitudeFixtureManager', 
+						            status: 'degraded',
+						            data: `Error while processing zone ${index+1} group ${groupIndex+1}: ${error.message}`,
+						        });
 							}
 						});
 					} else {
@@ -163,7 +183,16 @@ class AttitudeFixtureManager {
 					zoneName = index;
 				}
 
+				// log the error
 				logger.error(`Error while processing zone ${zoneName}: ${error}`);
+
+				// emit an event that we had an error 
+				// (note that since this error only applies to this zone, we are only in a degraded state, not full error)
+		        eventHub.emit('moduleStatus', { 
+		            name: 'AttitudeFixtureManager', 
+		            status: 'degraded',
+		            data: `Error while processing zone ${zoneName}: ${error}`,
+		        });
 			}
 		});
 	}
@@ -180,7 +209,7 @@ class AttitudeFixtureManager {
 
 		// validate the number of fixtures
 		if (fixtures.length == 0) {
-			logger.info('No fixtures for this show. Skipping.');
+			// logger.info('No fixtures for this show. Skipping.');
 			return;
 		}
 
@@ -235,6 +264,13 @@ class AttitudeFixtureManager {
 				}
 			} catch (error) {
 				logger.error(`Error while applying show ${showId} to fixture index ${index}: ${error.message}`);
+
+				// emit an event that we had an error (degraded state only)
+		        eventHub.emit('moduleStatus', { 
+		            name: 'AttitudeFixtureManager', 
+		            status: 'degraded',
+		            data: `Error while applying show ${showId} to fixture index ${index}: ${error.message}`,
+		        });
 			}
 		});
 	}
@@ -323,6 +359,13 @@ class AttitudeFixtureManager {
 		    	// we're still going to process this show later, so that the fixtures it should run on will default 
 		    	// to gray (128,128,128) instead of black or no signal
 		    	logger.warn(`Show ${show.name} is not compatible with the new engine. Fixtures will be gray!`);
+
+				// emit an event that we are in a warning phase, bcause this show is incompatible
+		        eventHub.emit('moduleStatus', { 
+		            name: 'AttitudeFixtureManager', 
+		            status: 'warning',
+		            data: `Show ${show.name} is not compatible with the new engine. Fixtures will be gray!`,
+		        });
 		    }
 
 		    // now actually run the engine to process colors

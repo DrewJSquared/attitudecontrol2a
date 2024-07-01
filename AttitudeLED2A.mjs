@@ -31,8 +31,8 @@ class AttitudeLED {
 		// store the path to this port
 		this.portPath = LAPTOP_MODE ? '/dev/cu.usbmodem1301' : '/dev/ttyACM0';
 
-		// store the current color
-		this.color = 'A';
+		// store the current color (default to D which is green for boot up)
+		this.color = 'D';
 
 		// create the port
 		this.port = new SerialPort({ path: this.portPath, baudRate: 115200, autoOpen: false });
@@ -50,6 +50,13 @@ class AttitudeLED {
 	handleError(error) {
 		// log an error message
 		logger.error(`Error connecting to Attitude LED panel: ${error.message}`);
+
+		// error connecting
+        eventHub.emit('moduleStatus', { 
+            name: 'AttitudeLED', 
+            status: 'errored',
+            data: `Error connecting to Attitude LED panel: ${error.message}`,
+        });
 	}
 
 
@@ -57,6 +64,13 @@ class AttitudeLED {
 	handleClose() {
 		// log an error message
 		logger.error(`Attitude LED panel disconnected!`);
+
+		// error connecting
+        eventHub.emit('moduleStatus', { 
+            name: 'AttitudeLED', 
+            status: 'errored',
+            data: `Attitude LED panel disconnected!`,
+        });
 
 		// attempt to reconnect
 		this.reconnect();
@@ -72,6 +86,13 @@ class AttitudeLED {
 			} else {
 				// else log that we reconnected
 				logger.info(`Reconnected to Attitude LED Panel (Raspberry Pi Pico)!`);
+		
+				// log that we reconnected
+		        eventHub.emit('moduleStatus', { 
+		            name: 'AttitudeLED', 
+		            status: 'reconnected',
+		            data: `Reconnected to Attitude LED Panel (Raspberry Pi Pico)!`,
+		        });
 			}
 		});
 	}
@@ -88,8 +109,15 @@ class AttitudeLED {
 				// use the error handler function we already made to handle this error
 				this.handleError(err);
 			} else {
-				// else log that we reconnected
-				logger.info(`Reconnected to Attitude LED Panel (Raspberry Pi Pico)!`);
+				// else log that we connected
+				logger.info(`Connected to Attitude LED Panel (Raspberry Pi Pico)!`);
+
+				// emit an event that we opened the port to the LED panel
+		        eventHub.emit('moduleStatus', { 
+		            name: 'AttitudeLED', 
+		            status: 'opened',
+		            data: this.color,
+		        });
 
 				// write the current color to the port immediately
 				this.writeColor();
@@ -110,11 +138,25 @@ class AttitudeLED {
 				// if there's an error handle the error using the handler we already built
 				if (err) {
 					this.handleError(err);
+				} else {
+					// no error, so emit a success event
+			        eventHub.emit('moduleStatus', { 
+			            name: 'AttitudeLED', 
+			            status: 'connected',
+			            data: this.color,
+			        });
 				}
 			});
 		} else {
 			// log that the port is not open and we are attempting to reconnect
 			logger.error(`Port is not open. Attempting to reconnect...`);
+
+			// not open error
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeLED', 
+	            status: 'errored',
+	            data: 'Port is not open. Attempting to reconnect...',
+	        });
 
 			// attempt to reconnect
 			this.reconnect();

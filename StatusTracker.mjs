@@ -18,11 +18,11 @@ const logger = new Logger('StatusTracker');
 
 
 // variables
-const SAMPLE_INTERVAL = 5000;  // interval for how often to check system status
+const SAMPLE_INTERVAL = 3000;  // interval for how often to check system status (should be 3-5 sec)
 
 
 
-// Define the StatusTracker class to handle network communication
+// Define the StatusTracker class
 class StatusTracker {
 
     // constructor
@@ -32,6 +32,13 @@ class StatusTracker {
 
         // start the interval for status sampling
         this.startSampling();
+
+        // emit an event that the statusTracker is initializing
+        eventHub.emit('moduleStatus', { 
+            name: 'StatusTracker', 
+            status: 'initializing',
+            data: '',
+        });
     }
 
 
@@ -49,6 +56,13 @@ class StatusTracker {
         // wrap the system status processing in a try catch, in case there's errors with os
         try {
             logger.info(`Processing current system status at ${ new Date().toLocaleTimeString() }`);
+
+            // emit an event that the statusTracker is running
+            eventHub.emit('moduleStatus', { 
+                name: 'StatusTracker', 
+                status: 'operational',
+                data: '',
+            });
 
             // create an object with the current system status in it
             const currentSystemStatus = {
@@ -81,6 +95,13 @@ class StatusTracker {
             eventHub.emit('systemStatusUpdate', currentSystemStatus);
         } catch (error) {
             logger.error(`Error processing system status: ${error}`);
+
+            // emit an event that we had an error
+            eventHub.emit('moduleStatus', { 
+                name: 'StatusTracker', 
+                status: 'errored',
+                data: `Error processing system status: ${error}`,
+            });
         }
     }
 

@@ -19,8 +19,9 @@ const logger = new Logger('AttitudeControl2A');
 import eventHub from './EventHub.mjs';
 import networkModule from './NetworkModule.mjs';
 import statusTracker from './StatusTracker.mjs';
+import moduleStatusTracker from './ModuleStatusTracker.mjs';
 import configManager from './ConfigManager.mjs';
-// import attitudeLED from './AttitudeLED2A.mjs';
+import attitudeLED from './AttitudeLED2A.mjs';
 import attitudeSACN from './AttitudeSACN2A.mjs';
 import attitudeScheduler from './AttitudeScheduler.mjs';
 import attitudeFixtureManager from './AttitudeFixtureManager.mjs';
@@ -30,10 +31,10 @@ attitudeFixtureManager.init();
 
 
 
-// attitudeLED.setColor('A');
+// attitudeLED.setColor('D');
 
 
-attitudeSACN.initialize(2);
+attitudeSACN.initialize(8);
 
 // attitudeSACN.set(1,1,255);
 // attitudeSACN.set(1,2,0);
@@ -44,6 +45,15 @@ attitudeSACN.initialize(2);
 // attitudeSACN.set(1,15,255);
 
 
+
+
+// setTimeout(function () {
+// 	eventHub.emit('moduleStatus', { 
+// 		name: 'Scheduler Fake Module', 
+// 		status: 'operational',
+// 		data: '',
+// 	});
+// }, 1000);
 
 
 // setInterval(function() {
