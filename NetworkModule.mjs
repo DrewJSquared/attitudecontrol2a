@@ -88,6 +88,51 @@ class NetworkModule {
         eventHub.on('systemStatusUpdate', this.systemStatusUpdateListener.bind(this));
         eventHub.on('moduleStatusUpdate', this.moduleStatusUpdateListener.bind(this));
 
+        // add some initial log message to the queue to show that we are initializing the system
+        this.queue.push({
+        	type: 'log',
+        	timestamp: new Date(),
+        	data: {
+				timestamp: new Date().toISOString(),
+				module: 'RESTART',
+				type: 'warn',
+				message: '--------------------------------------------------',
+		    },
+        });
+
+        this.queue.push({
+        	type: 'log',
+        	timestamp: new Date(),
+        	data: {
+				timestamp: new Date().toISOString(),
+				module: 'AttitudeControl2A',
+				type: 'info',
+				message: 'Attitude Control Device Firmware (2nd gen) v2.A',
+		    },
+        });
+
+        this.queue.push({
+        	type: 'log',
+        	timestamp: new Date(),
+        	data: {
+				timestamp: new Date().toISOString(),
+				module: 'AttitudeControl2A',
+				type: 'info',
+				message: 'Copyright 2024 Drew Shipps, J Squared Systems',
+		    },
+        });
+
+        this.queue.push({
+        	type: 'log',
+        	timestamp: new Date(),
+        	data: {
+				timestamp: new Date().toISOString(),
+				module: 'AttitudeControl2A',
+				type: 'info',
+				message: 'System initializing at time ' + new Date(),
+		    },
+        });
+
     	// log the initialization
     	logger.info('Network module initialization complete!');
     }
@@ -386,7 +431,6 @@ class NetworkModule {
 
 // Create an instance of the NetworkModule and initialize it with the config variables at the top of this file
 const networkModule = new NetworkModule(API_URL, PING_INTERVAL);
-networkModule.init();
 
 // Export the network module instance for use in other modules
 export default networkModule;

@@ -274,7 +274,6 @@ class ConfigManager {
 
 // Create an instance of the ConfigManager and initialize it
 const configManager = new ConfigManager();
-configManager.init();
 
 // Export the configManager instance for use in other modules
 export default configManager;

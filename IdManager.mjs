@@ -13,7 +13,7 @@ import fs from 'fs';
 import eventHub from './EventHub.mjs';
 
 import Logger from './Logger.mjs';
-const logger = new Logger('IdManager');
+const logger = new Logger('IDManager');
 
 
 
@@ -110,7 +110,6 @@ class IdManager {
 
 // Create an instance of the IdManager and initialize it
 const idManager = new IdManager();
-idManager.init();
 
 // Export the idManager instance for use in other modules
 export default idManager;

@@ -29,9 +29,6 @@ class ModuleStatusTracker {
         // minimum and maximum interval to send a status update
         this.sampleInterval = SAMPLE_INTERVAL;
 
-        // start the interval for status sampling
-        this.startSampling();
-
         // variable to hold on to each module's current status
         this.modules = [];
 
@@ -43,8 +40,9 @@ class ModuleStatusTracker {
     }
 
 
-    // start sampling on interval
-    startSampling() {
+    // initialization function
+    init() {
+        // start the interval for status sampling
         setInterval(() => {
             this.processAllModulesStatus();
         }, this.sampleInterval);

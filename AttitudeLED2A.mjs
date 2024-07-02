@@ -40,9 +40,6 @@ class AttitudeLED {
 		// Set up event listeners for the port
 	    this.port.on('error', (err) => this.handleError(err));
 	    this.port.on('close', () => this.handleClose());
-
-	    // Attempt to open the port on initialization
-	    this.initialize();
 	}
 
 
@@ -99,7 +96,7 @@ class AttitudeLED {
 
 
 	// Initialize the connection and start the interval for writing color
-	initialize() {
+	init() {
 		// log that we are Initializing the connection
 		logger.info(`Initializing connection to Attitude LED Panel (Raspberry Pi Pico)...`);
 

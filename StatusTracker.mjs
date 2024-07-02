@@ -30,9 +30,6 @@ class StatusTracker {
         // minimum and maximum interval to send a status update
         this.sampleInterval = SAMPLE_INTERVAL;
 
-        // start the interval for status sampling
-        this.startSampling();
-
         // emit an event that the statusTracker is initializing
         eventHub.emit('moduleStatus', { 
             name: 'StatusTracker', 
@@ -42,8 +39,8 @@ class StatusTracker {
     }
 
 
-    // start adaptive sampling on minimum interval
-    startSampling() {
+    // initialize the sampling process
+    init() {
         setInterval(() => {
             // process system status
             this.processSystemStatus();
