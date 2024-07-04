@@ -22,8 +22,8 @@ import idManager from './IdManager.mjs';
 
 
 // variables
-const API_URL = 'http://attitudelighting.test/api/v1/device/sync'; 
-// const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
+// const API_URL = 'http://attitudelighting.test/api/v1/device/sync'; 
+const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
 const PING_INTERVAL = 1000;  // interval in ms to ping the server (should be 1000ms)
 const MAX_ERROR_COUNT = 5;
 

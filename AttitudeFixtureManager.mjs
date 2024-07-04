@@ -358,14 +358,89 @@ class AttitudeFixtureManager {
 		    	// otherwise log a warning about this show
 		    	// we're still going to process this show later, so that the fixtures it should run on will default 
 		    	// to gray (128,128,128) instead of black or no signal
-		    	logger.warn(`Show ${show.name} is not compatible with the new engine. Fixtures will be gray!`);
 
-				// emit an event that we are in a warning phase, bcause this show is incompatible
-		        eventHub.emit('moduleStatus', { 
-		            name: 'AttitudeFixtureManager', 
-		            status: 'warning',
-		            data: `Show ${show.name} is not compatible with the new engine. Fixtures will be gray!`,
-		        });
+		    	// try to translate this show
+		    	try {
+			    	// this holds the new show names as keyed to match the old show type ids
+			    	let newShowTypes = ['Static', 'All', 'All', 'Chase', 'Chase', 'Chase'];
+			    	let translatedShowType = newShowTypes[show.type - 1];
+
+			    	// depending on the show type, we may need to set the transition width (default to 0.0)
+			    	let translatedTransitionWidth = 0;
+			    	if (show.type == 2 || show.type == 6) {
+			    		// if the show type is 2 (All Fade) or 6 (fluid chase) then transition width should be 1.0
+			    		translatedTransitionWidth = 1;
+			    	} else if (show.type == 5) {
+			    		// if the show type is 5 (fade chase) then transition width should be 0.25
+			    		translatedTransitionWidth = 0.25;
+			    	}
+
+			    	// this holds the new directions as keyed to match the old direction numbers
+			    	let newDirections = ['Left to Right', 'Right to Left', 'Middle to Ends', 'Ends to Middle'];
+			    	let translatedDirection = newDirections[show.direction];
+
+			    	// the old speed is an integer from 0 - 100. Let's translate that to a value 10 - 180
+			    	let translatedSpeed = Math.round(show.speed * 1.7 + 10);
+
+			    	// the old size is an integer 1 - 20, so map that to some new values
+			    	let newSizeValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 20, 25, 33, 50, 100];
+			    	let translatedSize = newSizeValues[show.size - 1];
+
+			    	// splits should translate exactly as normal
+			    	let translatedSplits = Math.round(show.splits);
+
+			    	// now let's process colors
+			    	let translatedColors = show.colorsList.map(color => {
+				        // Destructure the color array into red, green, and blue components
+				        const [red, green, blue] = color;
+				        
+				        // Create an object with the required keys and assign values
+				        // If all components are 255, it is white; otherwise, set white to 0
+				        const colorObject = {
+				            red: red,
+				            green: green,
+				            blue: blue,
+				        };
+
+				        return colorObject;
+				    });
+
+
+			    	// configure the engine instance with the paramters from the translated show data
+		            engineInstance.engine.configure({
+			            showType: translatedShowType,
+			            direction: translatedDirection,
+			            speed: translatedSpeed,
+			            size: translatedSize,
+			            splits: translatedSplits,
+			            transition: 'Both Edges',
+			            transitionWidth: translatedTransitionWidth,
+			            bounce: false,
+			            colors: translatedColors,
+			        });
+
+		            // log that this show was not compatible but was translated properly
+		    		logger.warn(`Show ${show.name} is not compatible with the new engine, but it was successfully translated!`);
+
+			        // emit an event that we are in a degraded state, bcause this show is incompatible
+			        eventHub.emit('moduleStatus', { 
+			            name: 'AttitudeFixtureManager', 
+			            status: 'degraded',
+			            data: `Show ${show.name} is not compatible with the new engine, but it was successfully translated!`,
+			        });
+		        } catch (error) {
+		        	// otherwise log that we had an error translating it
+			    	// we're still going to process this show later, so that the fixtures it should run on will default 
+			    	// to gray (128,128,128) instead of black or no signal
+			    	logger.error(`Show ${show.name} is not compatible with the new engine and failed to translate with error: ${error}`);
+
+					// emit an event that we are in a warning phase, bcause this show is incompatible
+			        eventHub.emit('moduleStatus', { 
+			            name: 'AttitudeFixtureManager', 
+			            status: 'degraded',
+			            data: `Show ${show.name} is not compatible with the new engine and failed to translate with error: ${error}`,
+			        });
+		        }
 		    }
 
 		    // now actually run the engine to process colors

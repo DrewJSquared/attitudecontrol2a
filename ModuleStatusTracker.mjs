@@ -46,7 +46,7 @@ class ModuleStatusTracker {
         setInterval(() => {
             this.processAllModulesStatus();
         }, this.sampleInterval);
-        
+
         // run once immediately
         this.processAllModulesStatus();
     }
@@ -195,8 +195,8 @@ class ModuleStatusTracker {
             // check to make sure the existing one isnt an error, and we're within 1 second of it
             if (newModuleStatus.status == 'operational' 
                 && (this.modules[index].status == 'degraded' || this.modules[index].status == 'errored')
-                && ((newModuleStatus.timestamp - this.modules[index].timestamp) < 1)) {
-                // console.log('tried to add a new status that was operational within 1 sec of a non operational status');
+                && ((newModuleStatus.timestamp - this.modules[index].timestamp) < 5)) {
+                // console.log('tried to add a new status that was operational within 5 sec of a non operational status');
 
                 // console.log('new one was ', newModuleStatus)
                 // console.log('old one was ', this.modules[index])
