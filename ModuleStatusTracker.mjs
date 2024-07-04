@@ -46,6 +46,9 @@ class ModuleStatusTracker {
         setInterval(() => {
             this.processAllModulesStatus();
         }, this.sampleInterval);
+        
+        // run once immediately
+        this.processAllModulesStatus();
     }
 
 

@@ -45,6 +45,9 @@ class StatusTracker {
             // process system status
             this.processSystemStatus();
         }, this.sampleInterval);
+
+        // run once immediately
+        this.processSystemStatus();
     }
 
 
