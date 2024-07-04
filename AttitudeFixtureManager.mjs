@@ -231,8 +231,8 @@ class AttitudeFixtureManager {
 		}
 
 	    // now try to apply this show to the fixtures by iterating over each
-		fixtureSegments.forEach((fixtureSegment, index) => {
-			try {
+		try {
+			fixtureSegments.forEach((fixtureSegment, index) => {
 				// variable to hold the color for this fixture (default to black)
 				let thisFixtureColor = {
 					red: 0,
@@ -262,17 +262,17 @@ class AttitudeFixtureManager {
 				} else {
 					throw new Error(`Unknown fixture color mode ${fixtureSegment.colorMode}`);
 				}
-			} catch (error) {
-				logger.error(`Error while applying show ${showId} to fixture index ${index}: ${error.message}`);
+			});
+		} catch (error) {
+			logger.error(`Error while applying show ${showId} to ${fixtureSegments.length} fixtures: ${error.message}`);
 
-				// emit an event that we had an error (degraded state only)
-		        eventHub.emit('moduleStatus', { 
-		            name: 'AttitudeFixtureManager', 
-		            status: 'degraded',
-		            data: `Error while applying show ${showId} to fixture index ${index}: ${error.message}`,
-		        });
-			}
-		});
+			// emit an event that we had an error (degraded state only)
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeFixtureManager', 
+	            status: 'degraded',
+	            data: `Error while applying show ${showId} to ${fixtureSegments.length} fixtures: ${error.message}`,
+	        });
+		}
 	}
 
 

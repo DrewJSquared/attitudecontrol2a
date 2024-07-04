@@ -18,7 +18,7 @@ const logger = new Logger('StatusTracker');
 
 
 // variables
-const SAMPLE_INTERVAL = 3000;  // interval for how often to check system status (should be 3-5 sec)
+const SAMPLE_INTERVAL = 5000;  // interval for how often to check system status (should be 5000ms)
 
 
 
@@ -125,16 +125,16 @@ class StatusTracker {
 
         if (hours >= 24) {
             const days = Math.floor(hours / 24);
-            const formattedDays = String(days).padStart(2, '0');
-            const formattedHours = String(hours % 24).padStart(2, '0');
-            const formattedMinutes = String(minutes).padStart(2, '0');
-            const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+            const formattedDays = String(days).padStart(1, '0');
+            const formattedHours = String(hours % 24).padStart(1, '0');
+            const formattedMinutes = String(minutes).padStart(1, '0');
+            const formattedSeconds = String(remainingSeconds).padStart(1, '0');
             return `${formattedDays}d ${formattedHours}h ${formattedMinutes}m ${formattedSeconds}s`;
         } else {
-            const formattedHours = String(hours).padStart(2, '0');
-            const formattedMinutes = String(minutes).padStart(2, '0');
-            const formattedSeconds = String(remainingSeconds).padStart(2, '0');
-            return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+            const formattedHours = String(hours).padStart(1, '0');
+            const formattedMinutes = String(minutes).padStart(1, '0');
+            const formattedSeconds = String(remainingSeconds).padStart(1, '0');
+            return `${formattedHours}h ${formattedMinutes}m ${formattedSeconds}s`;
         }
     }
 }

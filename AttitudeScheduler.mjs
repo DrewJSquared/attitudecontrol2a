@@ -15,7 +15,7 @@ const logger = new Logger('AttitudeScheduler');
 import eventHub from './EventHub.mjs';
 import configManager from './ConfigManager.mjs';
 
-import { DateTime } from 'Luxon';
+import { DateTime } from 'luxon';
 
 
 

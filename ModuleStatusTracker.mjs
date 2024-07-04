@@ -16,7 +16,7 @@ const logger = new Logger('StatusTracker');
 
 
 // variables
-const SAMPLE_INTERVAL = 1000;  // interval for how often to check system status
+const SAMPLE_INTERVAL = 2000;  // interval for how often to check system status (should be 2000ms)
 const UNRESPONSIVE_THRESHOLD = 10;  // number of seconds before considering a module unresponsive
 
 
@@ -187,7 +187,7 @@ class ModuleStatusTracker {
         const index = this.modules.findIndex(module => module.name === newModuleStatus.name);
 
         if (index !== -1) {
-            // If found, update the existing entry
+            // If found, update the existing entry  
 
             // check to make sure the existing one isnt an error, and we're within 1 second of it
             if (newModuleStatus.status == 'operational' 
