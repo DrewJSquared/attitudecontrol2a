@@ -278,6 +278,26 @@ class ConfigManager {
 		return this.config?.assignedToLocation ?? true;
 	}
 
+	// reboot
+	getReboot() {
+		return this.config?.reboot ?? false;
+	}
+
+	// restart
+	getRestart() {
+		return this.config?.restart ?? false;
+	}
+
+	// update
+	getUpdate() {
+		return this.config?.update ?? false;
+	}
+
+	// autoupdate
+	getAutoupdate() {
+		return this.config?.autoupdate ?? false;
+	}
+
 
 	// check the current log level against the specified level. 
 	// if we're at that level, or any more specific level, then return true. otherwise return false

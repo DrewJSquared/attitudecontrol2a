@@ -21,6 +21,7 @@ import configManager from './ConfigManager.mjs';
 import networkModule from './NetworkModule.mjs';
 import statusTracker from './StatusTracker.mjs';
 import moduleStatusTracker from './ModuleStatusTracker.mjs';
+import macrosModule from './MacrosModule.mjs';
 
 
 
@@ -70,10 +71,14 @@ setTimeout(() => {
 	attitudeFixtureManager.init();
 }, 60);
 
+// initialize macros module
+setTimeout(() => {
+	macrosModule.init();
+}, 70);
 
-// initialize schedule and fixtures
+// initialization sequence complete!
 setTimeout(() => {
 	logger.info('Device initialization sequence complete!');
-}, 70);
+}, 80);
 
 

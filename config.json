@@ -1,15 +1,32 @@
 {
   "device_id": 1,
   "serialnumber": "AC-0000001",
-  "assignedToLocation": false,
+  "assignedToLocation": true,
   "timezone": "America/Chicago",
   "logLevel": "minimal",
   "reboot": false,
-  "restart": false,
+  "restart": true,
   "update": false,
   "autoupdate": false,
-  "zones": [],
-  "fixtures": [],
+  "zones": [
+    {
+      "name": "Example Zone",
+      "color": "blue",
+      "groups": []
+    }
+  ],
+  "fixtures": [
+    {
+      "id": 1,
+      "type": 6,
+      "label": "Rope 1",
+      "universe": 1,
+      "startAddress": 1,
+      "zoneNumber": "1",
+      "groupNumber": "0",
+      "quantity": 50
+    }
+  ],
   "fixtureTypes": [
     {
       "id": 1,
@@ -168,6 +185,33 @@
       "name": "Red White Blue"
     },
     {
+      "id": 5,
+      "type": 1,
+      "direction": 0,
+      "speed": 50,
+      "size": 18,
+      "pause": 0,
+      "splits": 1,
+      "colorsList": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ]
+      ],
+      "name": "Asperiores Vel"
+    },
+    {
       "id": 6,
       "type": 1,
       "direction": 0,
@@ -195,6 +239,33 @@
       "name": "Iure Qui Molestias"
     },
     {
+      "id": 9,
+      "type": 1,
+      "direction": 0,
+      "speed": 49,
+      "size": 18,
+      "pause": 0,
+      "splits": 1,
+      "colorsList": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ]
+      ],
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
       "id": 10,
       "type": 1,
       "direction": 0,
@@ -210,6 +281,23 @@
         ]
       ],
       "name": "White"
+    },
+    {
+      "id": 11,
+      "type": 1,
+      "direction": 0,
+      "speed": 49,
+      "size": 18,
+      "pause": 0,
+      "splits": 1,
+      "colorsList": [
+        [
+          0,
+          0,
+          92
+        ]
+      ],
+      "name": "Deep Blue"
     },
     {
       "id": 13,
@@ -274,6 +362,60 @@
         ]
       ],
       "name": "Copy of Copy of First Show (to copy)"
+    },
+    {
+      "id": 19,
+      "type": 6,
+      "direction": 0,
+      "speed": 49,
+      "size": 18,
+      "pause": 0,
+      "splits": 1,
+      "colorsList": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ]
+      ],
+      "name": "new show"
+    },
+    {
+      "id": 20,
+      "type": 1,
+      "direction": 0,
+      "speed": 50,
+      "size": 18,
+      "pause": 0,
+      "splits": 1,
+      "colorsList": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ]
+      ],
+      "name": "Copy of Asperiores Vel"
     },
     {
       "id": 23,
@@ -364,6 +506,66 @@
       "name": "New Engine New Show"
     },
     {
+      "id": 35,
+      "engineVersion": "2A",
+      "showType": "Pulse",
+      "direction": "Middle to Ends",
+      "speed": 57,
+      "size": 194,
+      "splits": 2,
+      "transition": "Both Edges",
+      "transitionWidth": 0.7,
+      "bounce": true,
+      "colors": [
+        {
+          "red": 255,
+          "green": 255,
+          "blue": 255
+        },
+        {
+          "red": 255,
+          "green": 0,
+          "blue": 0
+        },
+        {
+          "red": 0,
+          "green": 0,
+          "blue": 255
+        }
+      ],
+      "name": "RWB Pulse"
+    },
+    {
+      "id": 36,
+      "engineVersion": "2A",
+      "showType": "Chase",
+      "direction": "Middle to Ends",
+      "speed": 120,
+      "size": 33,
+      "splits": 2,
+      "transition": "Both Edges",
+      "transitionWidth": 0.8,
+      "bounce": false,
+      "colors": [
+        {
+          "red": 255,
+          "green": 0,
+          "blue": 0
+        },
+        {
+          "red": 255,
+          "green": 255,
+          "blue": 255
+        },
+        {
+          "red": 0,
+          "green": 0,
+          "blue": 255
+        }
+      ],
+      "name": "AI Editor Show"
+    },
+    {
       "id": 37,
       "type": 1,
       "direction": 0,
@@ -391,113 +593,97 @@
       "name": "Legacy Show #2"
     }
   ],
-  "eventBlocks": [],
-  "scheduleBlocks": [],
-  "customBlocks": [],
-  "attitudeSenses": [
+  "eventBlocks": [
     {
-      "id": 2,
-      "serialnumber": "SENS-0000002",
-      "data": [
-        {
-          "mode": "pulse",
-          "timeLength": "25",
-          "timeMode": "sec",
-          "override_id": null
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "1"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        },
-        {
-          "mode": "toggle",
-          "timeLength": "5",
-          "timeMode": "min",
-          "override_id": "0"
-        }
-      ]
+      "id": 1,
+      "name": "2.A Location",
+      "color": "blue",
+      "showdata": [
+        29,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "showstext": "New Engine New Show"
     }
   ],
+  "scheduleBlocks": [
+    {
+      "id": 1,
+      "eventBlockId": 1,
+      "day": 1,
+      "start": 1,
+      "height": 24
+    },
+    {
+      "id": 3,
+      "eventBlockId": 1,
+      "day": 3,
+      "start": 1,
+      "height": 24
+    },
+    {
+      "id": 4,
+      "eventBlockId": 1,
+      "day": 2,
+      "start": 1,
+      "height": 24
+    }
+  ],
+  "customBlocks": [],
+  "attitudeSenses": [],
   "overrides": [],
-  "webOverrides": []
+  "webOverrides": [
+    {
+      "id": 121,
+      "name": "Web Override #1",
+      "override_id": 0,
+      "active": 0,
+      "mode": "Pulse",
+      "time": "1",
+      "timemode": "hour"
+    },
+    {
+      "id": 122,
+      "name": "Web Override #2",
+      "override_id": 0,
+      "active": 0,
+      "mode": "Pulse",
+      "time": "1",
+      "timemode": "hour"
+    },
+    {
+      "id": 123,
+      "name": "Web Override #3",
+      "override_id": 0,
+      "active": 0,
+      "mode": "Pulse",
+      "time": "1",
+      "timemode": "hour"
+    },
+    {
+      "id": 124,
+      "name": "Web Override #4",
+      "override_id": 0,
+      "active": 0,
+      "mode": "Pulse",
+      "time": "1",
+      "timemode": "hour"
+    },
+    {
+      "id": 125,
+      "name": "Web Override #5",
+      "override_id": 0,
+      "active": 0,
+      "mode": "Pulse",
+      "time": "1",
+      "timemode": "hour"
+    }
+  ]
 }
