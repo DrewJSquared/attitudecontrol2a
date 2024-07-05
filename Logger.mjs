@@ -104,13 +104,15 @@ class Logger {
 
 		// switch case for the different types of logs
 		switch (logEntry.type) {
+			// NOTE: disabled actual console.logs for raspi so that we don't fill up the SD card with logs
+
 			// for standard info logs
 			case 'info':
 				// check if in laptop mode to use pretty npmlog, else use console (for raspi & PM2)
 				if (LAPTOP_MODE) {
 					npmlog.info(logEntry.module, logEntry.message);
 				} else {
-					console.warn(`INFO | ${logEntry.module} | ${logEntry.message}`);
+					// console.info(`INFO | ${logEntry.module} | ${logEntry.message}`);
 				}
 
 				break;
@@ -120,7 +122,7 @@ class Logger {
 				if (LAPTOP_MODE) {
 					npmlog.warn(logEntry.module, logEntry.message);
 				} else {
-					console.warn(`WARN | ${logEntry.module} | ${logEntry.message}`);
+					// console.warn(`WARN | ${logEntry.module} | ${logEntry.message}`);
 				}
 
 				break;
@@ -130,7 +132,7 @@ class Logger {
 				if (LAPTOP_MODE) {
 					npmlog.error(logEntry.module, logEntry.message);
 				} else {
-					console.error(`ERR! | ${logEntry.module} | ${logEntry.message}`);
+					// console.error(`ERR! | ${logEntry.module} | ${logEntry.message}`);
 				}
 
 				break;
@@ -140,7 +142,7 @@ class Logger {
 				if (LAPTOP_MODE) {
 					npmlog.warn(logEntry.module, `UNKNOWN LOG TYPE "${logEntry.type}" WITH MESSAGE: ${logEntry.message}`);
 				} else {
-					console.warn(`UNKNOWN LOG TYPE "${logEntry.type}" | ${logEntry.module} | ${logEntry.message}`);
+					// console.warn(`UNKNOWN LOG TYPE "${logEntry.type}" | ${logEntry.module} | ${logEntry.message}`);
 				}
 		}
 

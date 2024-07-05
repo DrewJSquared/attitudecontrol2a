@@ -806,9 +806,9 @@ class AttitudeEngine3 {
 
     // fade between two color objects
     fadeBetweenColorObjects(colorObject1, colorObject2, steps, currentStep) {
-        var red = sineFadeFunc(colorObject1.red, colorObject2.red, steps, currentStep);
-        var green = sineFadeFunc(colorObject1.green, colorObject2.green, steps, currentStep);
-        var blue = sineFadeFunc(colorObject1.blue, colorObject2.blue, steps, currentStep);
+        var red = fadeFunc(colorObject1.red, colorObject2.red, steps, currentStep);
+        var green = fadeFunc(colorObject1.green, colorObject2.green, steps, currentStep);
+        var blue = fadeFunc(colorObject1.blue, colorObject2.blue, steps, currentStep);
 
         return {
             red: red,
@@ -858,6 +858,10 @@ function saturatedFadeFunc(color1, color2, steps, currentStep) {
     var result = color2Val + color1Val;
 
     return result;
+}
+
+function fixedFadeFunc(color1, color2, steps, currentStep) {
+    
 }
 
 

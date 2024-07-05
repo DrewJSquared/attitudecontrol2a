@@ -3,7 +3,7 @@
   "serialnumber": "AC-0000001",
   "assignedToLocation": true,
   "timezone": "America/Chicago",
-  "logLevel": "interval",
+  "logLevel": "minimal",
   "reboot": false,
   "restart": false,
   "update": false,
@@ -591,6 +591,86 @@
         ]
       ],
       "name": "Legacy Show #2"
+    },
+    {
+      "id": 38,
+      "engineVersion": "2A",
+      "showType": "Chase",
+      "direction": "Left to Right",
+      "speed": 50,
+      "size": 40,
+      "splits": 1,
+      "transition": "Both Edges",
+      "transitionWidth": 0.59,
+      "bounce": false,
+      "colors": [
+        {
+          "red": 71,
+          "green": 0,
+          "blue": 0
+        },
+        {
+          "red": 72,
+          "green": 219,
+          "blue": 72
+        },
+        {
+          "red": 29,
+          "green": 29,
+          "blue": 63
+        },
+        {
+          "red": 147,
+          "green": 154,
+          "blue": 50
+        },
+        {
+          "red": 50,
+          "green": 154,
+          "blue": 133
+        },
+        {
+          "red": 53,
+          "green": 33,
+          "blue": 156
+        },
+        {
+          "red": 171,
+          "green": 89,
+          "blue": 141
+        }
+      ],
+      "name": "Fix Fade Show"
+    },
+    {
+      "id": 39,
+      "engineVersion": "2A",
+      "showType": "Chase",
+      "direction": "Left to Right",
+      "speed": 60,
+      "size": 33,
+      "splits": 1,
+      "transition": "Both Edges",
+      "transitionWidth": 1,
+      "bounce": false,
+      "colors": [
+        {
+          "red": 255,
+          "green": 0,
+          "blue": 0
+        },
+        {
+          "red": 0,
+          "green": 255,
+          "blue": 0
+        },
+        {
+          "red": 0,
+          "green": 0,
+          "blue": 255
+        }
+      ],
+      "name": "Another fade test"
     }
   ],
   "eventBlocks": [
@@ -599,7 +679,7 @@
       "name": "2.A Location",
       "color": "blue",
       "showdata": [
-        29,
+        39,
         0,
         0,
         0,
@@ -610,7 +690,7 @@
         0,
         0
       ],
-      "showstext": "New Engine New Show"
+      "showstext": "Another fade test"
     }
   ],
   "scheduleBlocks": [
@@ -632,6 +712,13 @@
       "id": 4,
       "eventBlockId": 1,
       "day": 2,
+      "start": 1,
+      "height": 24
+    },
+    {
+      "id": 5,
+      "eventBlockId": 1,
+      "day": 6,
       "start": 1,
       "height": 24
     }

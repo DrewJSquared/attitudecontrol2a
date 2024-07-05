@@ -66,7 +66,7 @@ class MacrosModule {
     processMacros() {
         // wrap the system status processing in a try catch, in case there's errors
         try {
-            if (configManager.checkLogLevel('interval') || true) { // TEMP LOG
+            if (configManager.checkLogLevel('interval')) {
                 logger.info(`Processing device macros at ${ new Date().toLocaleTimeString() }`);
             }
 
