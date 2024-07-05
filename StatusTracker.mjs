@@ -15,6 +15,8 @@ import eventHub from './EventHub.mjs';
 import Logger from './Logger.mjs';
 const logger = new Logger('StatusTracker');
 
+import configManager from './ConfigManager.mjs';
+
 
 
 // variables
@@ -55,7 +57,9 @@ class StatusTracker {
     processSystemStatus() {
         // wrap the system status processing in a try catch, in case there's errors with os
         try {
-            logger.info(`Processing current system status at ${ new Date().toLocaleTimeString() }`);
+            if (configManager.checkLogLevel('interval')) {
+                logger.info(`Processing current system status at ${ new Date().toLocaleTimeString() }`);
+            }
 
             // emit an event that the statusTracker is running
             eventHub.emit('moduleStatus', { 

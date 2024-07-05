@@ -101,7 +101,9 @@ class AttitudeScheduler {
     		this.layerScheduleToCreateFinal();
 
     		// log the final output schedule
-    		logger.info('Processed schedule and determined final show ids: ' + JSON.stringify(this.processedShowIds?.final));
+			if (configManager.checkLogLevel('interval')) {
+    			logger.info('Processed schedule and determined final show ids: ' + JSON.stringify(this.processedShowIds?.final));
+    		}
 
 			// emit an event that we properly processed the schedule
 	        eventHub.emit('moduleStatus', { 
@@ -187,7 +189,9 @@ class AttitudeScheduler {
 		this.now.minute = rezoned.minute;
 
 		// log the current time
-		logger.info(`Current time in ${this.timezoneString} is ${this.currentTimestamp.toFormat("ccc LLL d yyyy H:mm:ss 'GMT'ZZ (ZZZZ)")}`);
+		if (configManager.checkLogLevel('interval')) {
+			logger.info(`Current time in ${this.timezoneString} is ${this.currentTimestamp.toFormat("ccc LLL d yyyy H:mm:ss 'GMT'ZZ (ZZZZ)")}`);
+		}
 	}
 
 
@@ -205,7 +209,7 @@ class AttitudeScheduler {
 		    // if undefined, that means there's no block on the schedule grid for this point in time
 		    if (currentScheduleBlock == undefined) {
 		    	// log (optional)
-			    if (LOG_INDIVIDUAL_SCHEDULE_LEVELS) {
+			    if (configManager.checkLogLevel('detail')) {
 			    	logger.info('No block assigned to this point in time on the default weekly schedule grid.');
 			    }
 
@@ -227,7 +231,7 @@ class AttitudeScheduler {
 		    }
 
 		    // log that we finished (optional)
-		    if (LOG_INDIVIDUAL_SCHEDULE_LEVELS) {
+		    if (configManager.checkLogLevel('detail')) {
 		    	logger.info('Processed default weekly schedule: ' + JSON.stringify(this.processedShowIds.defaultWeeklySchedule));
 		    }
     	} catch (error) {
@@ -280,7 +284,9 @@ class AttitudeScheduler {
 			    ) {
 			        thisBlockShouldBeToday = true;
 			        if (endMonthDayStamp < startMonthDayStamp) {
-			        	logger.info('This schedule block wraps around the new year.');
+			        	if (configManager.checkLogLevel('detail')) {
+			        		logger.info('This schedule block wraps around the new year.');
+			        	}
 			        }
 			    }
 
@@ -294,7 +300,9 @@ class AttitudeScheduler {
 				    // see if we are within those numbers
 				    if (currentTimeNumber >= thisBlockStartNumber && currentTimeNumber < thisBlockEndNumber) {
 				    	// log that we're running this custom block
-				    	logger.info(`Running custom schedule block "${thisBlock.name}"`);
+				    	if (configManager.checkLogLevel('detail')) {
+				    		logger.info(`Running custom schedule block "${thisBlock.name}"`);
+				    	}
 
 				    	// pull the showdata out of this custom block and 
 				    	this.processedShowIds.customScheduleBlocks = this.layerAnOverride(this.processedShowIds.customScheduleBlocks, thisBlock.showdata);
@@ -308,7 +316,7 @@ class AttitudeScheduler {
 			});
 
 		    // log that we finished (optional)
-		    if (LOG_INDIVIDUAL_SCHEDULE_LEVELS) {
+		    if (configManager.checkLogLevel('detail')) {
 		    	logger.info('Processed custom schedule blocks: ' + JSON.stringify(this.processedShowIds.customScheduleBlocks));
 		    }
     	} catch (error) {
@@ -334,7 +342,7 @@ class AttitudeScheduler {
     	try {
 
     		// TODO IMPLEMENT OVERRIDES HERE
-		    if (LOG_INDIVIDUAL_SCHEDULE_LEVELS) {
+		    if (configManager.checkLogLevel('detail')) {
     			logger.warn(`Overrides processing hasn't yet been implemented!`);
     		}
 
@@ -366,7 +374,9 @@ class AttitudeScheduler {
 		    	// if it's active
 		        if (webOverride.active) {
 			    	// log that we're running this web override
-			    	logger.info(`Running active web override "${webOverride.name}"`);
+			    	if (configManager.checkLogLevel('detail')) {
+			    		logger.info(`Running active web override "${webOverride.name}"`);
+			    	}
 
 		            // Find the override object associated with this port
 		            const override = this.overrides.find(obj => obj.id === webOverride.override_id);
@@ -387,7 +397,7 @@ class AttitudeScheduler {
 		    });
 
 		    // log that we finished (optional)
-		    if (LOG_INDIVIDUAL_SCHEDULE_LEVELS) {
+		    if (configManager.checkLogLevel('detail')) {
 			    logger.info('Processed web overrides: ' + JSON.stringify(this.processedShowIds.webOverrides));
 			}
     	} catch (error) {

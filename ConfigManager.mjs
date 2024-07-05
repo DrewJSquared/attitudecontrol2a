@@ -19,7 +19,6 @@ const logger = new Logger('ConfigManager');
 
 // variables
 const CONFIG_FILE_PATH = './';  // path to save the config JSON file to
-const VERBOSE_LOGGING = false;
 
 
 
@@ -31,6 +30,9 @@ class ConfigManager {
 		// create the this.config property for all config to be stored in
 		this.config = {};
 		this.filePath = CONFIG_FILE_PATH + 'config.json';
+
+		// log levels
+		this.logLevels = ['none', 'minimal', 'interval', 'detail'];
 	}
 
 
@@ -83,7 +85,7 @@ class ConfigManager {
 		// try to save the config to a file
 		try {
 			// log that we're trying
-			if (VERBOSE_LOGGING) {
+			if (this.checkLogLevel('detail')) {
 				logger.info('Saving configuration to file...');
 			}
 
@@ -91,7 +93,7 @@ class ConfigManager {
 			fs.writeFileSync(this.filePath, JSON.stringify(this.config, null, 2));
 
 			// log success
-			if (VERBOSE_LOGGING) {
+			if (this.checkLogLevel('detail')) {
 				logger.info('Configuration saved successfully.');
 			}
 
@@ -117,12 +119,12 @@ class ConfigManager {
 	}
 
 
-	// update() - used to update only part of the configuration with new data
+	// update() - update the configuration with new data from the server
 	update(newData) {
 		// try to update the config with the new data, else log a failure
 		try {
 			// log that we're updating the config
-			if (VERBOSE_LOGGING) {
+			if (this.checkLogLevel('detail')) {
 				logger.info('Updating configuration with new data...');
 			}
 
@@ -130,7 +132,7 @@ class ConfigManager {
 			this.config = this.mergeObjects(this.config, newData);
 
 			// log success message
-			if (VERBOSE_LOGGING) {
+			if (this.checkLogLevel('detail')) {
 				logger.info('Successfully updated configuration!');
 			}
 
@@ -146,7 +148,9 @@ class ConfigManager {
 			this.saveToFile();
 
 			// log that we updated & saved
-			logger.info('Successfully updated and saved configuration!');
+			if (this.checkLogLevel('detail')) {
+				logger.info('Successfully updated and saved configuration!');
+			}
 		} catch (error) {
 			// log the error
 			logger.error(`Error updating configuration: ${error.message}`);
@@ -182,13 +186,13 @@ class ConfigManager {
 	
 	// fixtures
 	getFixtures() {
-        const data = this.config?.patch?.fixturesList;
+        const data = this.config?.fixtures;
 
         // if undefined then log that we have an error and return empty array
         if (data === undefined) {
         	// only log error if this.config is actually defined. otherwise, we just haven't gotten any config data yet
         	if (!Object.keys(this.config).length === 0) {
-        		logger.error(`Error accessing fixturesList! Invalid or undefined config.patch!`);
+        		logger.error(`Error accessing fixtures!`);
         	}
 
         	// TODO either way, emit an error to the module status tracker
@@ -201,11 +205,11 @@ class ConfigManager {
 
 	// zones
 	getZones() {
-        const data = this.config?.patch?.zonesList;
+        const data = this.config?.zones;
 
         // if undefined then log that we have an error and return empty array
         if (data === undefined) {
-            logger.error(`Error accessing zonesList! Invalid or undefined config.patch!`);
+            logger.error(`Error accessing zones!`);
             return [];
         }
 
@@ -251,22 +255,34 @@ class ConfigManager {
 		// try to get the parameter, else throw/log an error and return a default
 		try {
 			// ? is the safe optional chaining operator that safely grabs those properties
-	        const timezone = this.config?.devicemeta?.timezone;
+	        const timezone = this.config?.timezone;
 
 	        // if undefined then we have an error
 	        if (timezone === undefined) {
-	            throw new Error('Either devicemeta or timezone is missing!');
+	            throw new Error('Timezone is missing!');
 	        }
 
 	        // else return the grabbed tiemzone
 	        return timezone;
 	    } catch (error) {
 	    	// log the error to logger
-	        logger.error(`Error accessing config.devicemeta.timezone: ${error.message}`);
+	        logger.error(`Error accessing config.timezone: ${error.message}`);
 
 	        // return default
 	        return 'America/Chicago';
 	    }
+	}
+
+
+	// check the current log level against the specified level. 
+	// if we're at that level, or any more specific level, then return true. otherwise return false
+	checkLogLevel(level) {
+	    // Get the index of the current log level and the given level in the logLevels array
+	    const currentLevelIndex = this.logLevels.indexOf(this.config.logLevel ?? 'detail');
+	    const levelIndex = this.logLevels.indexOf(level);
+
+	    // Return true if the current log level index is greater than or equal to the given level index
+	    return currentLevelIndex >= levelIndex;
 	}
 }
 

@@ -74,9 +74,6 @@ class AttitudeFixtureManager {
     processFixtures() {
     	// try to process fixtures
     	try {
-    		// temp
-        	// logger.info('Processing fixtures/shows/schedule...');
-
     		// get fixtures/zones/shows configManager and schedule from attitudeScheduler
         	this.getConfigration();
 
@@ -92,8 +89,10 @@ class AttitudeFixtureManager {
         	// process the patch and schedule, then grab the output data from the engine and apply it to DMX
         	this.processPatchAndOutputShows();
 
-    		// log (optional)
-        	// logger.info('Successfully finished processing fixtures/shows/schedule and output data to sACN!');
+    		// log the interval
+    		if (configManager.checkLogLevel('detail')) {
+    			logger.info('Successfully finished processing fixtures/shows/schedule and output data to sACN!');
+        	}
 
 			// emit an event that we successfully processed everything
 	        eventHub.emit('moduleStatus', { 
@@ -420,7 +419,9 @@ class AttitudeFixtureManager {
 			        });
 
 		            // log that this show was not compatible but was translated properly
-		    		logger.warn(`Show ${show.name} is not compatible with the new engine, but it was successfully translated!`);
+    				if (configManager.checkLogLevel('minimal')) {
+		    			logger.warn(`Show ${show.name} is not compatible with the new engine, but it was successfully translated!`);
+		    		}
 
 			        // emit an event that we are in a degraded state, bcause this show is incompatible
 			        eventHub.emit('moduleStatus', { 

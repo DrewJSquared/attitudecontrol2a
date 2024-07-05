@@ -22,8 +22,8 @@ import idManager from './IdManager.mjs';
 
 
 // variables
-// const API_URL = 'http://attitudelighting.test/api/v1/device/sync'; 
-const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
+const API_URL = 'http://attitudelighting.test/api/v1/device/sync'; 
+// const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
 const PING_INTERVAL = 1000;  // interval in ms to ping the server (should be 1000ms)
 const MAX_ERROR_COUNT = 5;
 
@@ -152,7 +152,9 @@ class NetworkModule {
     // perform a network request to send queued data to the server
     performNetworkRequest() {
     	// log that we're performing a request
-    	logger.info(`Performing network request at ${ new Date().toLocaleTimeString() }`);
+    	if (configManager.checkLogLevel('interval')) {
+    		logger.info(`Performing network request at ${ new Date().toLocaleTimeString() }`);
+    	}
 
     	// grab the entire current queue into a payload for this particular request (this clears the queue)
     	const payload = this.queue.splice(0, this.queue.length);
@@ -169,6 +171,9 @@ class NetworkModule {
     		serialnumber: idManager.getSerialNumber(),
     		payload: payload,
     	};
+
+    	// log the entire request object
+    	// console.log(JSON.stringify(requestObject));
 
     	// Make a POST request to the API endpoint with the request data
 		fetch(this.url, {
@@ -188,12 +193,17 @@ class NetworkModule {
 		    }
 
 			// log a success message
-    		logger.info(`${response.status} ${response.statusText} request successful! Connected to attitude.lighting server!`);
+			if (configManager.checkLogLevel('minimal')) {
+	    		logger.info(`${response.status} ${response.statusText} request successful! Connected to attitude.lighting server!`);
+	    	}
 
     		// if there had previously been errors, then flag that we need to grab the missed messages out of local file storage
     		if (this.errorCounter > MAX_ERROR_COUNT) {
     			this.loadMissedNetworkMessagesFlag = true;
-    			logger.info('Successfully reconnected to the attitude.lighting server! Begin restoring missed network messages.');
+
+    			if (configManager.checkLogLevel('detail')) {
+	    			logger.info('Successfully reconnected to the attitude.lighting server! Begin restoring missed network messages.');
+	    		}
 
     			// emit a moduleStatus event since we just reconnected
 	    		eventHub.emit('moduleStatus', { 
@@ -262,7 +272,7 @@ class NetworkModule {
     	// wrap this logic in a try/catch, so that errors here will be caught instead of causing us to resend data in the fetch function
     	try {
     		// actually process the response data from the server here
-    		if (VERBOSE_LOGGING) {
+			if (configManager.checkLogLevel('detail')) {
     			logger.info('Processing response data from server...');
     		}
 
@@ -273,7 +283,7 @@ class NetworkModule {
     		configManager.update(data);
 
     		// log success
-    		if (VERBOSE_LOGGING) {
+    		if (configManager.checkLogLevel('detail')) {
     			logger.info('Successfully processed response data from server!');
     		}
     	} catch (error) {
@@ -338,7 +348,9 @@ class NetworkModule {
     // loadMissedNetworkMessages - load the messages that we missed out of the JSON and add them to the queue
     loadMissedNetworkMessages() {
     	// quick log that we are loading missed messages
-		logger.info('Loading missed messages from local JSON file...');
+    	if (configManager.checkLogLevel('detail')) {
+			logger.info('Loading missed messages from local JSON file...');
+		}
 
     	// variable to hold the parsed data from the missed messages file
     	let parsedData = this.loadMissedNetworkMessagesJSONFromFile();
@@ -346,7 +358,9 @@ class NetworkModule {
     	// if there's no data
     	if (parsedData.length == 0) {
     		// log that all missed messages have been resent
-    		logger.info('No missed messages left to resend!');
+    		if (configManager.checkLogLevel('detail')) {
+    			logger.info('No missed messages left to resend!');
+    		}
 
     		// change this flag to false since we're done resending missed messages
     		this.loadMissedNetworkMessagesFlag = false;
@@ -400,7 +414,9 @@ class NetworkModule {
     	try {
     		fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2));
 
-    		logger.info('Saved the current payload to the missedNetworkMessages.json file!');
+    		if (configManager.checkLogLevel('detail')) {
+	    		logger.info('Saved the current payload to the missedNetworkMessages.json file!');
+	    	}
     	} catch (error) {
     		// log a warning that the file couldn't be saved
     		logger.error('Unable to save the network queue to a file, error: ' + error.message);

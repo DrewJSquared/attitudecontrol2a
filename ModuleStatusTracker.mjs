@@ -13,6 +13,8 @@ import attitudeSACN from './AttitudeSACN2A.mjs';
 import Logger from './Logger.mjs';
 const logger = new Logger('StatusTracker');
 
+import configManager from './ConfigManager.mjs';
+
 
 
 // variables
@@ -56,7 +58,9 @@ class ModuleStatusTracker {
     processAllModulesStatus() {
         // wrap the system status processing in a try catch, in case there's errors with os
         try {
-            logger.info(`Processing current status of all modules at ${ new Date().toLocaleTimeString() }`);
+            if (configManager.checkLogLevel('interval')) {
+                logger.info(`Processing current status of all modules at ${ new Date().toLocaleTimeString() }`);
+            }
 
             // iterate over each module to check if any modules are unresponsive
             const currentTime = Date.now();
