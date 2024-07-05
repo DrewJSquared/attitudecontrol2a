@@ -217,37 +217,37 @@ class ConfigManager {
 	}
 
 	getFixtureTypes() {
-		return this.config.fixtureTypes || [];
+		return this.config.fixtureTypes ?? [];
 	}
 
 	// shows
 	getShows() {
-        return this.config.shows || [];
+        return this.config.shows ?? [];
 	}
 
 	// scheduleBlocks
 	getScheduleBlocks() {
-		return this.config.scheduleBlocks || [];
+		return this.config.scheduleBlocks ?? [];
 	}
 
 	// eventBlocks
 	getEventBlocks() {
-		return this.config.eventBlocks || [];
+		return this.config.eventBlocks ?? [];
 	}
 
 	// customBlocks 
 	getCustomBlocks() {
-		return this.config.customBlocks || [];
+		return this.config.customBlocks ?? [];
 	}
 	
 	// overrides
 	getOverrides() {
-		return this.config.overrides || [];
+		return this.config.overrides ?? [];
 	}
 	
 	// webOverrides
 	getWebOverrides() {
-		return this.config.webOverrides || [];
+		return this.config.webOverrides ?? [];
 	}
 
 	// timezone
@@ -271,6 +271,11 @@ class ConfigManager {
 	        // return default
 	        return 'America/Chicago';
 	    }
+	}
+
+	// assigned to location or not
+	getAssignedToLocation() {
+		return this.config?.assignedToLocation ?? true;
 	}
 
 

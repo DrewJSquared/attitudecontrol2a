@@ -74,32 +74,54 @@ class AttitudeFixtureManager {
     processFixtures() {
     	// try to process fixtures
     	try {
-    		// get fixtures/zones/shows configManager and schedule from attitudeScheduler
-        	this.getConfigration();
+    		// check if we are assigned to a location or not
+    		if (configManager.getAssignedToLocation()) {
+	    		// get fixtures/zones/shows configManager and schedule from attitudeScheduler
+	        	this.getConfigration();
 
-        	// find unique show IDs in schedule
-			this.uniqueShowIds = this.findUniqueNumbers(this.schedule);
+	        	// find unique show IDs in schedule
+				this.uniqueShowIds = this.findUniqueNumbers(this.schedule);
 
-			// generate/remove engine instances if needed
-			this.generateEngineInstances();
+				// generate/remove engine instances if needed
+				this.generateEngineInstances();
 
-			// process each engine instance, updating engine config if necesary and running engine
-			this.processEngineInstances();
+				// process each engine instance, updating engine config if necesary and running engine
+				this.processEngineInstances();
 
-        	// process the patch and schedule, then grab the output data from the engine and apply it to DMX
-        	this.processPatchAndOutputShows();
+	        	// process the patch and schedule, then grab the output data from the engine and apply it to DMX
+	        	this.processPatchAndOutputShows();
 
-    		// log the interval
-    		if (configManager.checkLogLevel('detail')) {
-    			logger.info('Successfully finished processing fixtures/shows/schedule and output data to sACN!');
-        	}
+	    		// log the interval
+	    		if (configManager.checkLogLevel('detail')) {
+	    			logger.info('Successfully finished processing fixtures/shows/schedule and output data to sACN!');
+	        	}
 
-			// emit an event that we successfully processed everything
-	        eventHub.emit('moduleStatus', { 
-	            name: 'AttitudeFixtureManager', 
-	            status: 'operational',
-	            data: 'Processed fixtures/shows/schedule and sent DMX to AttitudeSACN module!',
-	        });
+				// emit an event that we successfully processed everything
+		        eventHub.emit('moduleStatus', { 
+		            name: 'AttitudeFixtureManager', 
+		            status: 'operational',
+		            data: 'Processed fixtures/shows/schedule and sent DMX to AttitudeSACN module!',
+		        });
+		    } else {
+		    	// otherwise we aren't assigned to a location, so set everything to white
+		    	for (let u = 1; u <= 8; u++) {
+		    		for (let c = 1; c <= 512; c++) {
+		    			attitudeSACN.set(u, c, 255);
+		    		}
+		    	}
+
+	    		// log the interval
+	    		if (configManager.checkLogLevel('detail')) {
+	    			logger.info('Device is unassigned, so no fixtures to process. Successfully output white to all channels!');
+	        	}
+
+				// emit an event that we successfully output white
+		        eventHub.emit('moduleStatus', { 
+		            name: 'AttitudeFixtureManager', 
+		            status: 'operational',
+		            data: 'Device is unassigned, so no fixtures to process. Successfully output white to all channels!',
+		        });
+		    }
     	} catch (error) {
     		// else log error
             logger.error(`Error processing fixtures: ${error}`);

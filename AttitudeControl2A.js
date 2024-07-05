@@ -4,13 +4,6 @@
 
 
 
-// ==================== INITIALIZE ====================
-// import npmlog from 'npmlog';
-// npmlog.info('INIT', 'Attitude Control Device Firmware (2nd gen) v2.A');
-// npmlog.info('INIT', 'Copyright 2024 Drew Shipps, J Squared Systems');
-// npmlog.info('INIT', 'System initializing at time ' + new Date());
-
-
 
 // ==================== IMPORT ====================
 import Logger from './Logger.mjs';
