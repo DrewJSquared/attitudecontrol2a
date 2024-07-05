@@ -74,7 +74,7 @@ class MacrosModule {
             this.getUpdatedConfig();
 
             // TEMP log values
-            console.log(`reboot ${this.reboot} restart ${this.restart} update ${this.update} autoupdate ${this.autoupdate} `);
+            // console.log(`reboot ${this.reboot} restart ${this.restart} update ${this.update} autoupdate ${this.autoupdate} `);
 
             // handle reboot
             this.handleReboot();
@@ -300,7 +300,7 @@ class MacrosModule {
                 autoupdateResults: this.autoupdateResults,
             }
 
-            console.log(macrosData);
+            // console.log(macrosData);
 
             // emit a network event to let the server know about the macros statuses
             eventHub.emit('macrosStatus', macrosData);

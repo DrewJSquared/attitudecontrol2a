@@ -3,9 +3,9 @@
   "serialnumber": "AC-0000001",
   "assignedToLocation": true,
   "timezone": "America/Chicago",
-  "logLevel": "minimal",
+  "logLevel": "interval",
   "reboot": false,
-  "restart": true,
+  "restart": false,
   "update": false,
   "autoupdate": false,
   "zones": [
