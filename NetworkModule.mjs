@@ -194,7 +194,7 @@ class NetworkModule {
 		    }
 
 			// log a success message
-			if (configManager.checkLogLevel('minimal')) {
+			if (configManager.checkLogLevel('interval')) {
 	    		logger.info(`${response.status} ${response.statusText} request successful! Connected to attitude.lighting server!`);
 	    	}
 

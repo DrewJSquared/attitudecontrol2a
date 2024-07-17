@@ -11,6 +11,7 @@ import eventHub from './EventHub.mjs';
 // variables & options
 const LAPTOP_MODE = (process.platform == 'darwin');
 const MAX_TIME_SINCE_DUPLICATE_LOG_SHOWN = 5000; // max interval in ms to ensure duplicate logs are still shown at some point
+const DEV_MODE = false; // if set to true, logs will still show even on raspberry pi units
 
 
 // create the class
@@ -111,8 +112,8 @@ class Logger {
 				// check if in laptop mode to use pretty npmlog, else use console (for raspi & PM2)
 				if (LAPTOP_MODE) {
 					npmlog.info(logEntry.module, logEntry.message);
-				} else {
-					// console.info(`INFO | ${logEntry.module} | ${logEntry.message}`);
+				} else if (DEV_MODE) {
+					console.info(`INFO | ${logEntry.module} | ${logEntry.message}`);
 				}
 
 				break;
@@ -121,8 +122,8 @@ class Logger {
 			case 'warn':
 				if (LAPTOP_MODE) {
 					npmlog.warn(logEntry.module, logEntry.message);
-				} else {
-					// console.warn(`WARN | ${logEntry.module} | ${logEntry.message}`);
+				} else if (DEV_MODE) {
+					console.warn(`WARN | ${logEntry.module} | ${logEntry.message}`);
 				}
 
 				break;
@@ -131,8 +132,8 @@ class Logger {
 			case 'error':
 				if (LAPTOP_MODE) {
 					npmlog.error(logEntry.module, logEntry.message);
-				} else {
-					// console.error(`ERR! | ${logEntry.module} | ${logEntry.message}`);
+				} else if (DEV_MODE) {
+					console.error(`ERR! | ${logEntry.module} | ${logEntry.message}`);
 				}
 
 				break;
@@ -141,8 +142,8 @@ class Logger {
 			default:
 				if (LAPTOP_MODE) {
 					npmlog.warn(logEntry.module, `UNKNOWN LOG TYPE "${logEntry.type}" WITH MESSAGE: ${logEntry.message}`);
-				} else {
-					// console.warn(`UNKNOWN LOG TYPE "${logEntry.type}" | ${logEntry.module} | ${logEntry.message}`);
+				} else if (DEV_MODE) {
+					console.warn(`UNKNOWN LOG TYPE "${logEntry.type}" | ${logEntry.module} | ${logEntry.message}`);
 				}
 		}
 

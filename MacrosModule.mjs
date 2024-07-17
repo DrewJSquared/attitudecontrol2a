@@ -10,6 +10,7 @@
 
 // import modules
 import { exec } from 'child_process';
+import fs from 'fs';
 import eventHub from './EventHub.mjs';
 
 import Logger from './Logger.mjs';
@@ -148,37 +149,25 @@ class MacrosModule {
                             status: 'errored',
                             data: `Device reboot command failed with error: ${error}`,
                         });
-                    } else if (stderr) {
-                        // set the rebootCommandSuccess variable to false, since the reboot failed
-                        this.rebootCommandSuccess = false;
-
-                        // set the rebootCommandResults variable to the error output from console
-                        this.rebootCommandResults = stderr;
-
-                        // log the error
-                        logger.error(`Device reboot command failed with stderr: ${stderr}`);
-
-                        // emit an event that we had an error
-                        eventHub.emit('moduleStatus', { 
-                            name: 'MacrosModule', 
-                            status: 'errored',
-                            data: `Device reboot command failed with stderr: ${stderr}`,
-                        });
                     } else {
                         // otherwise success, so set this.rebootCommandSuccess to true to indicate that the command was successful
                         this.rebootCommandSuccess = true;
 
                         // set the rebootCommandResults variable to the success output from console
-                        this.rebootCommandResults = stdout;
+                        if (stdout.length > 0) {
+                            this.rebootCommandResults = stdout;
+                        } else {
+                            this.rebootCommandResults = stderr;
+                        }
 
                         // log the success
-                        logger.info(`Device reboot activated successfully with stdout: ${stdout}`);
+                        logger.info(`Device reboot activated successfully with message: ${this.rebootCommandResults}`);
 
                         // emit a success event
                         eventHub.emit('moduleStatus', { 
                             name: 'MacrosModule', 
                             status: 'operational',
-                            data: `Device reboot activated successfully with stdout: ${stdout}`,
+                            data: `Device reboot activated successfully with message: ${this.rebootCommandResults}`,
                         });
                     }
                 });
@@ -200,72 +189,65 @@ class MacrosModule {
 
     // handle restart command
     handleRestart() {
-        /*
-        // check if we need to restart
-        if (this.restart == true) {
+        // check if a restart command has been queued from the server
+        if (this.restartQueuedFromServer == true) {
 
-            // this one is causing the script to get stuck in a restart loop because as soon as the command is fired, 
-            // this javascript can no longer run because it gets killed. so we need a more advanced way to run this command.
-            // first, we need to delete config file, then send a success message to server. 
-            // then trigger the pm2 restart command and hope it works, because we won't have any time to know if it worked or not
-            // before this process is killed. but, we can set a timeout for 15 seconds, 
-            // and if the timeout does actually get to run, then it must have failed. 
-            // so in that timeout, we can have an error log to send to server to let it know we failed. 
+            // get the file path for the config.json file
+            let configFilePath = configManager.getConfigFilePath();
 
+            // try to remove it and restart pm2
+            try {
+                // syncronously remove the 
+                fs.unlinkSync(configFilePath);
 
+                // restart pm2 asyncronosly after 30 seconds.
+                // this is intended to give the network module a second to let the server know
+                // that the delete config part worked
+                this.restartPm2Async();
 
-            // Command to restart pm2
-            const command = 'pm2 restart all';
+                // set this.restartCommandSuccess to true to indicate that the command was successful
+                this.restartCommandSuccess = true;
 
-            // Execute the command
-            exec(command, (error, stdout, stderr) => {
-                if (error) {
-                    // set the restartResults variable to the error text
-                    this.restartResults = error;
+                // set the restartCommandResults variable to a success string
+                this.restartCommandResults = 'config.json successfully deleted and pm2 restart queued for 30 seconds from now!';
 
-                    // log the error
-                    logger.error(`Script restart command failed with error: ${error}`);
+                // log the success
+                logger.info(`config.json successfully deleted and pm2 restart queued for 30 seconds from now!`);
 
-                    // emit an event that we had an error
-                    eventHub.emit('moduleStatus', { 
-                        name: 'MacrosModule', 
-                        status: 'errored',
-                        data: `Script restart command failed with error: ${error}`,
-                    });
-                } else if (stderr) {
-                    // set the restartResults variable to the error output from console
-                    this.restartResults = stderr;
+                // emit a success event
+                eventHub.emit('moduleStatus', { 
+                    name: 'MacrosModule', 
+                    status: 'operational',
+                    data: `config.json successfully deleted and pm2 restart queued for 30 seconds from now!`,
+                });
+            } catch (error) {
+                // else catch any errors with deleting the file or restarting pm2
 
-                    // log the error
-                    logger.error(`Script restart command failed with stderr: ${stderr}`);
+                // set the restartCommandSuccess variable to false, since the restart failed
+                this.restartCommandSuccess = false;
 
-                    // emit an event that we had an error
-                    eventHub.emit('moduleStatus', { 
-                        name: 'MacrosModule', 
-                        status: 'errored',
-                        data: `Script restart command failed with stderr: ${stderr}`,
-                    });
+                // set the restartCommandResults variable to the error text
+                if (error.code === 'ENOENT') {
+                    this.restartCommandResults = `File not found: ${configFilePath}`;
                 } else {
-                    // otherwise success, so set this.restart to false since it's already been triggered
-                    this.restart = false;
-
-                    // set the rebootResults variable to the success output from console
-                    this.restartResults = stdout;
-
-                    // log the success
-                    logger.info(`Script restart activated successfully with stdout: ${stdout}`);
-
-                    // emit a success event
-                    eventHub.emit('moduleStatus', { 
-                        name: 'MacrosModule', 
-                        status: 'operational',
-                        data: `Script restart activated successfully with stdout: ${stdout}`,
-                    });
+                    this.restartCommandResults = `An error occurred while deleting ${configFilePath}: ${error}`;
                 }
-            });
-        }
 
-        */
+                // log the error
+                logger.error(this.restartCommandResults);
+
+                // emit an event that we had an error
+                eventHub.emit('moduleStatus', { 
+                    name: 'MacrosModule', 
+                    status: 'errored',
+                    data: this.restartCommandResults,
+                });
+            }
+        } else {
+            // otherwise, we don't need to restart, so ensure that restartCommandResults is reset
+            this.restartCommandSuccess = false;
+            this.restartCommandResults = '';
+        }
     }
 
 
@@ -273,6 +255,31 @@ class MacrosModule {
     handleUpdate() {
         // TODO handle update
     }
+
+
+
+    async restartPm2Async() {
+        // Command to async restart PM2 after 30 sec
+        const command = 'sleep 30; pm2 restart all';
+
+        // Execute the command
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                // log the error
+                logger.error(`PM2 restart command failed with error: ${error}`);
+            } else {
+                // otherwise success
+
+                // the problem here is that this code will never execute,
+                // because if the pm2 restart all command is successful
+                // then this code will be killed and restarted anyway
+
+                // we'll go ahead and log the success, but this message will probably never be seen by anyone
+                logger.info(`PM2 restart command success!`);
+            }
+        });
+    }
+
 
 
     // emit a macros event to the system

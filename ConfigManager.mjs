@@ -299,6 +299,14 @@ class ConfigManager {
 	}
 
 
+
+
+	// get the config file path
+	getConfigFilePath() {
+		return this.filePath;
+	}
+
+
 	// check the current log level against the specified level. 
 	// if we're at that level, or any more specific level, then return true. otherwise return false
 	checkLogLevel(level) {

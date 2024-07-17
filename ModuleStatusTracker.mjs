@@ -18,8 +18,8 @@ import configManager from './ConfigManager.mjs';
 
 
 // variables
-const SAMPLE_INTERVAL = 2000;  // interval for how often to check system status (should be 2000ms)
-const UNRESPONSIVE_THRESHOLD = 10;  // number of seconds before considering a module unresponsive
+const SAMPLE_INTERVAL = 15000;  // interval for how often to check module statuses (should be 15000ms)
+const UNRESPONSIVE_THRESHOLD = 35;  // number of seconds before considering a module unresponsive
 
 
 
