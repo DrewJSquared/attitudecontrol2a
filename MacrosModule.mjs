@@ -21,7 +21,7 @@ import configManager from './ConfigManager.mjs';
 
 
 // variables
-const SAMPLE_INTERVAL = 5000;  // interval for how often to process macros (should be 5000ms)
+const SAMPLE_INTERVAL = 15000;  // interval for how often to process macros (should be 15000ms)
 const LAPTOP_MODE = (process.platform == 'darwin');
 
 

@@ -4,7 +4,7 @@
   "assignedToLocation": true,
   "timezone": "America/Chicago",
   "logLevel": "minimal",
-  "reboot": false,
+  "reboot": true,
   "restart": false,
   "update": false,
   "autoupdate": false,
