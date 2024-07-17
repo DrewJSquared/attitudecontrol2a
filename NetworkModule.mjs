@@ -22,8 +22,8 @@ import idManager from './IdManager.mjs';
 
 
 // variables
-const API_URL = 'http://attitudelighting.test/api/v1/device/sync'; 
-// const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
+// const API_URL = 'http://attitudelighting.test/api/v1/device/sync'; 
+const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
 const PING_INTERVAL = 1000;  // interval in ms to ping the server (should be 1000ms)
 const MAX_ERROR_COUNT = 5;
 
@@ -87,6 +87,7 @@ class NetworkModule {
         eventHub.on('log', this.logListener.bind(this));
         eventHub.on('systemStatusUpdate', this.systemStatusUpdateListener.bind(this));
         eventHub.on('moduleStatusUpdate', this.moduleStatusUpdateListener.bind(this));
+        eventHub.on('macrosStatus', this.macrosStatusListener.bind(this));
 
         // add some initial log message to the queue to show that we are initializing the system
         this.queue.push({
@@ -328,6 +329,12 @@ class NetworkModule {
     // moduleStatusUpdateListener for moduleStatus updated events
     moduleStatusUpdateListener(currentModuleStatus) {
     	this.enqueueData('moduleStatus', currentModuleStatus);
+    }
+
+
+    // macrosStatusListener for macrosStatus events
+    macrosStatusListener(currentMacrosStatus) {
+    	this.enqueueData('macrosStatus', currentMacrosStatus);
     }
 
 

@@ -34,17 +34,19 @@ class MacrosModule {
         this.sampleInterval = SAMPLE_INTERVAL;
 
         // variables
-        this.reboot = false;
-        this.restart = false;
-        this.update = false;
-        this.autoupdate = false;
+        this.rebootQueuedFromServer = false;
+        this.restartQueuedFromServer = false;
+        this.updateQueuedFromServer = false;
 
-        this.rebootResults = '';
-        this.restartResults = '';
-        this.updateResults = '';
-        this.autoupdateResults = '';
+        this.rebootCommandSuccess = false;
+        this.restartCommandSuccess = false;
+        this.updateCommandSuccess = false;
 
-        // emit an event that the statusTracker is initializing
+        this.rebootCommandResults = '';
+        this.restartCommandResults = '';
+        this.updateCommandResults = '';
+
+        // emit an event that the macros module is operational
         eventHub.emit('moduleStatus', { 
             name: 'MacrosModule', 
             status: 'operational',
@@ -73,9 +75,6 @@ class MacrosModule {
             // get updated config from configManager
             this.getUpdatedConfig();
 
-            // TEMP log values
-            // console.log(`reboot ${this.reboot} restart ${this.restart} update ${this.update} autoupdate ${this.autoupdate} `);
-
             // handle reboot
             this.handleReboot();
 
@@ -84,9 +83,6 @@ class MacrosModule {
 
             // handle update
             this.handleUpdate();
-
-            // handle autoupdate
-            this.handleAutoupdate();
 
             // emit macros event back to server
             this.emitMacrosEvent();
@@ -117,27 +113,31 @@ class MacrosModule {
 
     // get updated config from configManager
     getUpdatedConfig() {
-        this.reboot = configManager.getReboot();
-        this.restart = configManager.getRestart();
-        this.update = configManager.getUpdate();
-        this.autoupdate = configManager.getAutoupdate();
+        this.rebootQueuedFromServer = configManager.getReboot();
+        this.restartQueuedFromServer = configManager.getRestart();
+        this.updateQueuedFromServer = configManager.getUpdate();
     }
 
 
     // handle reboot command
     handleReboot() {
-        // check if we need to reboot
-        if (this.reboot == true) {
+        // check if a reboot command has been queued from the server
+        if (this.rebootQueuedFromServer == true) {
+
             // check if we're running on laptop or raspi
             if (!LAPTOP_MODE) {
-                // Command to schedule a restart in 30 seconds
-                const command = 'sudo shutdown -r +0.5';
+
+                // Command to schedule a restart in 1 minute
+                const command = 'sudo shutdown -h +1';
 
                 // Execute the command
                 exec(command, (error, stdout, stderr) => {
                     if (error) {
-                        // set the rebootResults variable to the error text
-                        this.rebootResults = error;
+                        // set the rebootCommandSuccess variable to false, since the reboot failed
+                        this.rebootCommandSuccess = false;
+
+                        // set the rebootCommandResults variable to the error text
+                        this.rebootCommandResults = error;
 
                         // log the error
                         logger.error(`Device reboot command failed with error: ${error}`);
@@ -149,8 +149,11 @@ class MacrosModule {
                             data: `Device reboot command failed with error: ${error}`,
                         });
                     } else if (stderr) {
-                        // set the rebootResults variable to the error output from console
-                        this.rebootResults = stderr;
+                        // set the rebootCommandSuccess variable to false, since the reboot failed
+                        this.rebootCommandSuccess = false;
+
+                        // set the rebootCommandResults variable to the error output from console
+                        this.rebootCommandResults = stderr;
 
                         // log the error
                         logger.error(`Device reboot command failed with stderr: ${stderr}`);
@@ -162,11 +165,11 @@ class MacrosModule {
                             data: `Device reboot command failed with stderr: ${stderr}`,
                         });
                     } else {
-                        // otherwise success, so set this.reboot to false since it's already been triggered
-                        this.reboot = false;
+                        // otherwise success, so set this.rebootCommandSuccess to true to indicate that the command was successful
+                        this.rebootCommandSuccess = true;
 
-                        // set the rebootResults variable to the success output from console
-                        this.rebootResults = stdout;
+                        // set the rebootCommandResults variable to the success output from console
+                        this.rebootCommandResults = stdout;
 
                         // log the success
                         logger.info(`Device reboot activated successfully with stdout: ${stdout}`);
@@ -183,21 +186,21 @@ class MacrosModule {
                 // log that we're on laptop mode
                 logger.warn(`Device reboot activated, but LAPTOP_MODE is true!`);
 
-                // since we successfully queued the reboot, we can set this.reboot to false
-                this.reboot = false;
-
-                // save the results from the stdout
-                this.rebootResults = '-- activated device reboot on laptop --';
+                // since we're in laptop mode, we'll fake that we completed the reboot successfully
+                this.rebootCommandSuccess = true;
+                this.rebootCommandResults = '-- activated device reboot on laptop --';
             }
         } else {
-            // otherwise, we don't need to reboot, so ensure that this.rebootResults is set to empty string
-            this.rebootResults = '';
+            // otherwise, we don't need to reboot, so ensure that rebootCommandResults is reset
+            this.rebootCommandSuccess = false;
+            this.rebootCommandResults = '';
         }
     }
 
 
     // handle restart command
     handleRestart() {
+        /*
         // check if we need to restart
         if (this.restart == true) {
 
@@ -261,6 +264,8 @@ class MacrosModule {
                 }
             });
         }
+
+        */
     }
 
 
@@ -270,37 +275,30 @@ class MacrosModule {
     }
 
 
-    // handle autoupdate command
-    handleAutoupdate() {
-        // TODO handle auto update
-    }
-
-
     // emit a macros event to the system
     emitMacrosEvent() {
-        // check the lengths of each results string to see if any results are present
-        if (this.rebootResults.length > 0 || this.restartResults.length > 0 
-            || this.updateResults.length > 0 || this.autoupdateResults.length > 0) {
+        // check if any macros had been queued from the server
+        if (this.rebootQueuedFromServer || this.restartQueuedFromServer || this.updateQueuedFromServer) {
 
             // log
-            if (configManager.checkLogLevel('detail') || true) { // TEMP LOG
-                logger.info(`Results are present, so something happened. Sending macros event to server...`);
+            if (configManager.checkLogLevel('detail')) {
+                logger.info(`At least one macro was queued by the server. Sending macros event with results back to server...`);
             }
 
             // setup the macros data object
             let macrosData = {
-                reboot: this.reboot,
-                restart: this.restart,
-                update: this.update,
-                autoupdate: this.autoupdate,
+                rebootQueuedFromServer: this.rebootQueuedFromServer,
+                rebootCommandSuccess: this.rebootCommandSuccess,
+                rebootCommandResults: this.rebootCommandResults,
 
-                rebootResults: this.rebootResults,
-                restartResults: this.restartResults,
-                updateResults: this.updateResults,
-                autoupdateResults: this.autoupdateResults,
+                restartQueuedFromServer: this.restartQueuedFromServer,
+                restartCommandSuccess: this.restartCommandSuccess,
+                restartCommandResults: this.restartCommandResults,
+
+                updateQueuedFromServer: this.updateQueuedFromServer,
+                updateCommandSuccess: this.updateCommandSuccess,
+                updateCommandResults: this.updateCommandResults,
             }
-
-            // console.log(macrosData);
 
             // emit a network event to let the server know about the macros statuses
             eventHub.emit('macrosStatus', macrosData);
