@@ -269,8 +269,16 @@ class MacrosModule {
                     console.log(error);
 
                 } else {
-                    console.log('stdout', stdout);
-                    console.log('stderr', stderr);
+
+
+                    // Split the stdout into an array of lines
+                    const lines = stdout.split('\n');
+
+                    // Get the last line, trimming any extra newline characters
+                    const lastLine = lines[lines.length - 1].trim();
+
+
+                    console.log('lastLine', lastLine);
 
                     console.log('NOW WOULD BE A GOOD TIME TO PM2 RESTART ALL');
                 }

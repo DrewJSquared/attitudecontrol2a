@@ -35,11 +35,6 @@ class IdManager {
 
 		// hold the file path for the id.json file
 		this.filePath = ID_FILE_PATH + 'id.json';
-
-		// if running on laptop, the file path is different
-		if (LAPTOP_MODE) {
-			this.filePath = './id.json';
-		}
 	}
 
 
@@ -72,6 +67,14 @@ class IdManager {
 			// failover to default values
 			this.id = 0;
 			this.serialnumber = 'unknown!';
+
+			// if running on laptop, the failover values are different
+			if (LAPTOP_MODE) {
+				logger.info(`Failed over to LAPTOP_MODE default values of ID 1 and SN AC-0000001!`);
+
+				this.id = 1;
+				this.serialnumber = 'AC-0000001';
+			}
 		}
 	}
 
