@@ -87,7 +87,7 @@ class MacrosModule {
 
         // run the three different macro functions as promises
         Promise.race([
-            Promise.all([this.handleReboot(), this.handleRestart(), this.handleRestart()]), // race these three promises 
+            Promise.all([this.handleReboot(), this.handleRestart(), this.handleUpdate()]), // race these three promises 
             timeoutPromise // with the timeout promise
         ])
         .then((results) => {
@@ -257,6 +257,8 @@ class MacrosModule {
                 this.rebootCommandSuccess = false;
                 this.rebootCommandResults = '';
 
+                console.log('No reboot queued from server.');
+
                 // resolve with a n/a message
                 resolve('No reboot queued from server.');
             }
@@ -332,6 +334,8 @@ class MacrosModule {
                 // otherwise, we don't need to restart, so ensure that restartCommandResults is reset
                 this.restartCommandSuccess = false;
                 this.restartCommandResults = '';
+
+                console.log('No restart queued from server.');
 
                 // resolve with a n/a message
                 resolve('No restart queued from server.');
@@ -412,6 +416,8 @@ class MacrosModule {
                 this.updateCommandSuccess = false;
                 this.updateCommandResults = '';
 
+                console.log('No update queued from server.');
+
                 // resolve with a n/a message
                 resolve('No update queued from server.');
             }
@@ -470,7 +476,7 @@ class MacrosModule {
             }
 
             // log macrosData before sending to network module
-            // console.log('macrosData', macrosData);
+            console.log('macrosData', macrosData);
 
             // emit a network event to let the server know about the macros statuses
             eventHub.emit('macrosStatus', macrosData);
