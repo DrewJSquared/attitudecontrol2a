@@ -253,7 +253,36 @@ class MacrosModule {
 
     // handle update command
     handleUpdate() {
-        // TODO handle update
+        // check if an update command has been queued from the server
+        if (this.updateQueuedFromServer == true) {
+
+            console.log('update queued from server!');
+
+
+
+            // Command to run the update
+            const command = './update.sh';
+
+            // Execute the command
+            exec(command, (error, stdout, stderr) => {
+                if (error) {
+                    console.log(error);
+
+                } else {
+                    console.log('stdout', stdout);
+                    console.log('stderr', stderr);
+
+                    console.log('NOW WOULD BE A GOOD TIME TO PM2 RESTART ALL');
+                }
+            });
+
+
+
+        } else {
+            // otherwise, we don't need to update, so ensure that updateCommandResults is reset
+            this.updateCommandSuccess = false;
+            this.updateCommandResults = '';
+        }
     }
 
 
