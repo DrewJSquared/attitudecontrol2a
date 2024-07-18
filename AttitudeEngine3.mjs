@@ -249,12 +249,9 @@ class AttitudeEngine3 {
         // clear out pixelData variable
         this.pixelData = [];
 
-        // Determine the number of pixels per color section
-        // use ceiling function to ensure no leftovers
-        // if we're on a static show, ignore size parameter
-        var percentageOfTotalPixelsPerColor = 100 / this.config.size;
-        if (this.config.showType == SHOWTYPES.STATIC) { percentageOfTotalPixelsPerColor = this.config.colors.length; }
-        this.pixelsPerColor = Math.ceil(RETURN_DATA_ARRAY_LENGTH / percentageOfTotalPixelsPerColor);
+        // Determine the number of pixels per color section based exclusively on color count
+        // size is processed later on in the system
+        this.pixelsPerColor = Math.ceil(RETURN_DATA_ARRAY_LENGTH / this.config.colors.length);
 
         // determine number of pixels to fade per color
         this.pixelsToFadePerColor = Math.round(this.pixelsPerColor * this.config.transitionWidth);
@@ -288,6 +285,7 @@ class AttitudeEngine3 {
         }
     }
 
+
     // play the chase effect color base on the pixels, statically. repeat to fill pixels if needed.
     calculateStaticEffect() {
         // calculate the color base
@@ -305,6 +303,7 @@ class AttitudeEngine3 {
         // validate that the resulting length is long enough (or trim if too long)
         this.validatePixelDataLength();
     }
+
 
     // all fade takes all fixtures and makes them the same color, then fades through each color in colors list
     calculateAllEffect() {
@@ -340,6 +339,7 @@ class AttitudeEngine3 {
         this.validatePixelDataLength();
     }
 
+
     // chase effect animates the color base across the pixels
     calculateChaseEffect() {
         // calculate the color base
@@ -350,6 +350,9 @@ class AttitudeEngine3 {
 
         // circulate array to animate it
         this.processCirculation();
+
+        // now process size to scale circulated array as needed
+        this.processSize();
 
         // expand length to 1000 (loop if necesary), or trim to 1000
         this.expandOrTrimPixelDataLength();
@@ -364,6 +367,8 @@ class AttitudeEngine3 {
         this.validatePixelDataLength();
     }
 
+
+    // pulse effect
     calculatePulseEffect() {
         // clear out pixelData variable
         this.pixelData = [];
@@ -448,6 +453,7 @@ class AttitudeEngine3 {
         // validate that the resulting length is long enough (or trim if too long)
         this.validatePixelDataLength();
     }
+
 
 
     // timing methods
@@ -608,6 +614,22 @@ class AttitudeEngine3 {
     }
 
 
+    // process the size parameter and stretch the array accordingly
+    processSize() {
+        // calculate the percent of total pixels per color (using size)
+        var percentageOfTotalPixelsPerColor = 100 / this.config.size;
+
+        // calculate the # of pixels to zoom in on
+        var numberOfPixelsToZoomInOn = Math.round(this.pixelsPerColor * percentageOfTotalPixelsPerColor);
+
+        // slice those pixels out of the pixelData array
+        var pixelsFromZoom = this.pixelData.slice(0, numberOfPixelsToZoomInOn);
+
+        // stretch the array to fit the total return data array length
+        this.pixelData = this.stretchArray(pixelsFromZoom, RETURN_DATA_ARRAY_LENGTH);
+    }
+
+
     // process directions
     processDirections() {
         switch (this.config.direction) {
@@ -741,6 +763,24 @@ class AttitudeEngine3 {
     }
 
 
+    // stretch an array from its original length to the newSize parameter
+    stretchArray(originalArray, newSize) {
+        const originalSize = originalArray.length;
+        const stretchedArray = new Array(newSize);
+
+        // Calculate the step size for even distribution
+        const step = originalSize / newSize;
+
+        for (let i = 0; i < newSize; i++) {
+            // Calculate the corresponding position in the original array
+            const pos = Math.floor(i * step);
+            stretchedArray[i] = originalArray[pos];
+        }
+
+        return stretchedArray;
+    }
+
+
     // split the array by x number of items (ex. split by 2 into halves, split by 3 into thirds)
     splitArrayByNumberOfItems(array, items) {
         // the # of items that should result from this array
@@ -806,6 +846,8 @@ class AttitudeEngine3 {
 
     // fade between two color objects
     fadeBetweenColorObjects(colorObject1, colorObject2, steps, currentStep) {
+        // we've been having issues with the fade curve for a while with unique colors
+        // such as non-primary colors. apparently, the fix is just to use the linear fade func
         var red = fadeFunc(colorObject1.red, colorObject2.red, steps, currentStep);
         var green = fadeFunc(colorObject1.green, colorObject2.green, steps, currentStep);
         var blue = fadeFunc(colorObject1.blue, colorObject2.blue, steps, currentStep);
@@ -858,10 +900,6 @@ function saturatedFadeFunc(color1, color2, steps, currentStep) {
     var result = color2Val + color1Val;
 
     return result;
-}
-
-function fixedFadeFunc(color1, color2, steps, currentStep) {
-    
 }
 
 
