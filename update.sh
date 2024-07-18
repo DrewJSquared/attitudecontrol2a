@@ -19,10 +19,10 @@ TARGET_DIR="./"
 # Create the target directory if it doesn't exist
 mkdir -p $TARGET_DIR
 
-# Move the contents to the target directory
-mv $UNZIPPED_DIR/* $TARGET_DIR/
+# Use rsync to move the contents to the target directory
+rsync -av --remove-source-files $UNZIPPED_DIR/ $TARGET_DIR/
 
 # Clean up temporary files
 rm -rf $ZIP_FILE $TMP_DIR
 
-echo "NEW ONE Repository downloaded and moved to $TARGET_DIR"
+echo "new 2 Repository downloaded and moved to $TARGET_DIR"
