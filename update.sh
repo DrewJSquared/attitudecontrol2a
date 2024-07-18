@@ -25,4 +25,4 @@ rsync -av --remove-source-files $UNZIPPED_DIR/ $TARGET_DIR/
 # Clean up temporary files
 rm -rf $ZIP_FILE $TMP_DIR
 
-echo "new 3 Repository downloaded and moved to $TARGET_DIR"
+echo "Attitude update.sh script complete!"
