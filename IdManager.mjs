@@ -18,8 +18,9 @@ const logger = new Logger('IDManager');
 
 
 // variables
-const ID_FILE_PATH = './';  // path to save the id JSON file to
+const ID_FILE_PATH = '../';  // path to save the id JSON file to
 const VERBOSE_LOGGING = false;
+const LAPTOP_MODE = (process.platform == 'darwin');
 
 
 
@@ -34,6 +35,11 @@ class IdManager {
 
 		// hold the file path for the id.json file
 		this.filePath = ID_FILE_PATH + 'id.json';
+
+		// if running on laptop, the file path is different
+		if (LAPTOP_MODE) {
+			this.filePath = './id.json';
+		}
 	}
 
 
