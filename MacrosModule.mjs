@@ -338,26 +338,23 @@ class MacrosModule {
                         // set the rebootCommandResults variable to the success output from console
                         this.updateCommandResults = results;
 
-                        // log the update results
-                        logger.info(`Update results: ${results}`);
-
                         // restart pm2 asyncronosly after 30 seconds.
                         // this is intended to give the network module a second to let the server know
                         // that the update was successful before restarting pm2
                         this.restartPm2Async();
 
-                        // log the success
-                        logger.info(`Firmware update downloaded successfully! Restarting pm2 in 30 seconds.`);
+                        // log the results as a success message
+                        logger.info(`${results} Restarting pm2 in 30 seconds.`);
 
                         // emit a success event
                         eventHub.emit('moduleStatus', { 
                             name: 'MacrosModule', 
                             status: 'operational',
-                            data: `Firmware update downloaded successfully! Restarting pm2 in 30 seconds.`,
+                            data: `${results} Restarting pm2 in 30 seconds.`,
                         });
 
                         // resolve with the success text
-                        resolve(`Firmware update downloaded successfully! Restarting pm2 in 30 seconds.`);
+                        resolve(`${results} Restarting pm2 in 30 seconds.`);
                     }
                 });
             } else {

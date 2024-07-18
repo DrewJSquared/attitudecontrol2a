@@ -22,8 +22,11 @@ import idManager from './IdManager.mjs';
 
 
 // variables
-// const API_URL = 'http://attitudelighting.test/api/v1/device/sync'; 
 const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
+
+const USE_LOCALHOST = false;  // set to true to use the attitudelighting.test API_URL instead (FOR DEVELOPMENT ONLY)
+const LAPTOP_MODE = (process.platform == 'darwin');  // checks whether we're running on macos (laptop mode) or not
+
 const PING_INTERVAL = 1000;  // interval in ms to ping the server (should be 1000ms)
 const MAX_ERROR_COUNT = 5; // max number of failed requests before payload will be saved to missed messages queue
 const NETWORK_REQUEST_TIMEOUT_MS = 15000;  // number of milliseconds to wait before considering the last request to have timed out
@@ -39,10 +42,19 @@ const MAX_MESSAGES_TO_RESEND_AT_ONCE = 250;
 class NetworkModule {
 
 	// constructor
-    constructor(url, interval) {
-        // Initialize the URL endpoint and request interval
-        this.url = url;
+    constructor(interval) {
+        // Initialize the request interval
         this.interval = interval;
+
+        // init URL endpoint to API_URL
+        this.url = API_URL;
+
+        // check if we're on laptop mode and USE_LOCALHOST is true, if so then use the attitudelighting.test API url.
+        // this is added to make absolutely sure that we only use the attitudelighting.test API URL if we're running on
+        // macOS laptop for development, and to ensure that production devices can NEVER use this url
+        if (USE_LOCALHOST && LAPTOP_MODE) {
+        	this.url = 'http://attitudelighting.test/api/v1/device/sync';
+        }
 
         // Initialize queue of objects that are pending to be sent to the server
         // these objects might be logs, current status objects, data from external devices, etc.
@@ -486,7 +498,7 @@ class NetworkModule {
 
 
 // Create an instance of the NetworkModule and initialize it with the config variables at the top of this file
-const networkModule = new NetworkModule(API_URL, PING_INTERVAL);
+const networkModule = new NetworkModule(PING_INTERVAL);
 
 // Export the network module instance for use in other modules
 export default networkModule;
