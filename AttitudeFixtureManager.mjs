@@ -27,6 +27,7 @@ import { TRANSITIONS } from './Transitions.js';
 
 // ==================== VARIABLES ====================
 const DMX_FRAME_INTERVAL = 25;  // interval speed in milliseconds for each DMX frame (should be 25ms)
+const GAMMA = 1.7;
 
 
 
@@ -259,11 +260,30 @@ class AttitudeFixtureManager {
 					red: 0,
 					green: 0,
 					blue: 0,
+					white: 0,
 				}
 
+				// if the current show id isn't zero
 				if (!(showId == 0)) {
-					// if the current show id isn't zero, then get the color corresponding to this pixel
+					// get the color corresponding to this pixel
 					thisFixtureColor = engineInstance.engine.getFixtureColor(index);
+
+					// process a white value for this color from RGB
+					thisFixtureColor.white = this.calculateWhiteFromRGB(thisFixtureColor);
+				}
+
+				// now run a gamma curve function on this color
+				thisFixtureColor = this.calculateColorGamma(thisFixtureColor);
+
+				// check if this fixture should be highlighted
+				if (fixtureSegment.highlight) {
+					// if so, set the color to full white (regardless of the engine color from previously)
+					thisFixtureColor = {
+						red: 255,
+						green: 255,
+						blue: 255,
+						white: 255,
+					}
 				}
 
 				// check color type & output DMX values
@@ -273,9 +293,6 @@ class AttitudeFixtureManager {
 					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress+1, thisFixtureColor.green);
 					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress+2, thisFixtureColor.blue);
 				} else if (fixtureSegment.colorMode == 'RGBW') {
-					// if it's RGBW, calculate a white value from RGB
-					thisFixtureColor.white = this.calculateWhiteFromRGB(thisFixtureColor);
-
 					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress, thisFixtureColor.red);
 					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress+1, thisFixtureColor.green);
 					attitudeSACN.set(fixtureSegment.universe, fixtureSegment.startAddress+2, thisFixtureColor.blue);
@@ -321,6 +338,7 @@ class AttitudeFixtureManager {
 	                    universe: thisFixture.universe,
 	                    startAddress: thisFixture.startAddress + (channelsPerSegment * i),
 	                    colorMode: thisFixtureType.color,
+	                    highlight: thisFixture.highlight ?? false,
 	                };
 	                resultList.push(newObject);
 	            }
@@ -331,6 +349,7 @@ class AttitudeFixtureManager {
 	                    universe: thisFixture.universe,
 	                    startAddress: thisFixture.startAddress + (channelsPerSegment * i),
 	                    colorMode: thisFixtureType.color,
+	                    highlight: thisFixture.highlight ?? false,
 	                };
 	                resultList.push(newObject);
 	            }
@@ -340,6 +359,7 @@ class AttitudeFixtureManager {
 	                universe: thisFixture.universe,
 	                startAddress: thisFixture.startAddress,
 	                colorMode: thisFixtureType.color,
+                    highlight: thisFixture.highlight ?? false,
 	            };
 	            resultList.push(newObject);
 	        }
@@ -576,6 +596,23 @@ class AttitudeFixtureManager {
 	    
 	    // Return the minimum value
 	    return minValue;
+	}
+
+
+	// run the input RGBW value through a gamma curve function
+	calculateColorGamma(input) {
+		return {
+		    red: this.applyGamma(input.red),
+		    green: this.applyGamma(input.green),
+		    blue: this.applyGamma(input.blue),
+		    white: this.applyGamma(input.white)
+	  	};
+	}
+
+
+	// actually apply gamma to a value
+	applyGamma(value) {
+  		return Math.round(Math.pow(value / 255, GAMMA) * 255);
 	}
 }
 

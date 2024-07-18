@@ -25,7 +25,8 @@ import idManager from './IdManager.mjs';
 // const API_URL = 'http://attitudelighting.test/api/v1/device/sync'; 
 const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
 const PING_INTERVAL = 1000;  // interval in ms to ping the server (should be 1000ms)
-const MAX_ERROR_COUNT = 5;
+const MAX_ERROR_COUNT = 5; // max number of failed requests before payload will be saved to missed messages queue
+const NETWORK_REQUEST_TIMEOUT_MS = 15000;  // number of milliseconds to wait before considering the last request to have timed out
 
 const VERBOSE_LOGGING = false;
 
@@ -58,6 +59,10 @@ class NetworkModule {
 		    }
 		}
 		*/
+
+		// init the request in progress system
+	  	this.requestInProgress = false;
+	  	this.lastRequestTimestamp = Date.now();
 
 		// Init missed messages system
 		this.errorCounter = 0;
@@ -152,10 +157,33 @@ class NetworkModule {
 
     // perform a network request to send queued data to the server
     performNetworkRequest() {
-    	// log that we're performing a request
-    	if (configManager.checkLogLevel('interval')) {
-    		logger.info(`Performing network request at ${ new Date().toLocaleTimeString() }`);
-    	}
+    	// grab the current time
+    	const now = Date.now();
+
+    	// check if we're already running a request
+    	if (this.requestInProgress && this.lastRequestTimestamp && (now - this.lastRequestTimestamp) < NETWORK_REQUEST_TIMEOUT_MS) {
+    		// since we're already running a request and it hasn't timed out yet, log this
+    		if (configManager.checkLogLevel('interval')) {
+	    		logger.info(`Network request already in progress and not timed out yet (${ new Date().toLocaleTimeString() })`);
+	    	}
+
+		    // simply return the function
+		    return;
+	  	}
+
+	  	// if there was a previous request that timed out, log that we're running a new one
+	  	if (this.requestInProgress) {
+    		logger.warn(`Previous network request timed out! Performing new network request at ${ new Date().toLocaleTimeString() }`);
+	  	} else {
+	  		// otherwise log that this is a brand new normal request
+	  		if (configManager.checkLogLevel('interval')) {
+	    		logger.info(`Performing network request at ${ new Date().toLocaleTimeString() }`);
+	    	}
+	  	}
+
+	  	// update the timestamp and request in progress flags
+	  	this.requestInProgress = true;
+	  	this.lastRequestTimestamp = now;
 
     	// grab the entire current queue into a payload for this particular request (this clears the queue)
     	const payload = this.queue.splice(0, this.queue.length);
@@ -187,6 +215,9 @@ class NetworkModule {
 
 		// handle the response asynchronously
 		.then(response => {
+			// no matter the result, change the flag to indicate that the request is no longer in progress
+			this.requestInProgress = false;
+
 			// check response status (response.ok will return true if the HTTP code is anything 200-299)
 		    if (!response.ok) {
 		    	// if not ok, throw an error
@@ -230,7 +261,6 @@ class NetworkModule {
 
 		// then handle the data from the response
 		.then(data => {
-
     		// handle the response data
     		this.handleResponse(data);
 
@@ -242,6 +272,9 @@ class NetworkModule {
 
 		// and catch any errors that occur
 		.catch(error => {
+			// even though it's an error, still change the flag to indicate that the request is no longer in progress
+			this.requestInProgress = false;
+
 			// log error to logger, which will show in console and queue log to be sent to server
     		logger.error(`Error during network request: ${error.message}`);
 
