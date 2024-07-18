@@ -32,6 +32,8 @@ logger.info('Attitude Control Device Firmware (2nd gen) v2.A');
 logger.info('Copyright 2024 Drew Shipps, J Squared Systems');
 logger.info('System initializing at time ' + new Date());
 
+console.log('THIS IS A BRAND NEW PEICE OF CODE')
+
 
 // initialize sACN (to ensure that we go to white DMX on fixtures)
 setTimeout(() => {
