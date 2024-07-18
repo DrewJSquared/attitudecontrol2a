@@ -256,9 +256,8 @@ class MacrosModule {
         // check if an update command has been queued from the server
         if (this.updateQueuedFromServer == true) {
 
+            // tmp
             console.log('update queued from server!');
-
-
 
             // Command to run the update
             const command = './update.sh';
@@ -266,32 +265,50 @@ class MacrosModule {
             // Execute the command
             exec(command, (error, stdout, stderr) => {
                 if (error) {
-                    console.log(error);
+                    // if there was an error executing the command
 
+                    // set the updateCommandSuccess variable to false, since the update failed
+                    this.updateCommandSuccess = false;
+
+                    // set the updateCommandResults variable to the error text
+                    this.updateCommandResults = `An error occurred during the update: ${error}`;
+
+                    // log the error
+                    logger.error(this.updateCommandResults);
+
+                    // emit an event that we had an error
+                    eventHub.emit('moduleStatus', { 
+                        name: 'MacrosModule', 
+                        status: 'errored',
+                        data: this.updateCommandResults,
+                    });
                 } else {
+                    // otherwise success, so set this.updateCommandSuccess to true to indicate that the command was successful
+                    this.updateCommandSuccess = true;
 
-
-                    // Split the stdout into an array of lines
+                    // get the results string from running the update
                     const lines = stdout.split('\n');
+                    const results = lines[lines.length - 2].trim();
 
-                    // Get the last line, trimming any extra newline characters
-                    const lastLine = lines[lines.length - 1].trim();
-                    console.log('lastLine', lastLine);
+                    // set the rebootCommandResults variable to the success output from console
+                    this.updateCommandResults = results;
 
-                    const lastLine2 = lines[lines.length - 2].trim();
-                    console.log('lastLine2', lastLine2);
+                    // restart pm2 asyncronosly after 30 seconds.
+                    // this is intended to give the network module a second to let the server know
+                    // that the update was successful before restarting pm2
+                    this.restartPm2Async();
 
-                    const lastLine3 = lines[lines.length - 3].trim();
-                    console.log('lastLine3', lastLine3);
+                    // log the success
+                    logger.info(`Firmware update downloaded successfully! Restarting pm2 in 30 seconds.`);
 
-
-
-                    console.log('NOW WOULD BE A GOOD TIME TO PM2 RESTART ALL');
+                    // emit a success event
+                    eventHub.emit('moduleStatus', { 
+                        name: 'MacrosModule', 
+                        status: 'operational',
+                        data: `Firmware update downloaded successfully! Restarting pm2 in 30 seconds.`,
+                    });
                 }
             });
-
-
-
         } else {
             // otherwise, we don't need to update, so ensure that updateCommandResults is reset
             this.updateCommandSuccess = false;
