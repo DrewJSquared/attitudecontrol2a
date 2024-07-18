@@ -23,7 +23,7 @@ import configManager from './ConfigManager.mjs';
 // variables
 const SAMPLE_INTERVAL = 15000;  // interval for how often to process macros (should be 15000ms)
 const LAPTOP_MODE = (process.platform == 'darwin');
-const MACROS_PROCESSING_TIMEOUT = 30000;  // should be 30000ms
+const MACROS_PROCESSING_TIMEOUT = 60000;  // should be 60000ms
 
 
 
@@ -120,56 +120,6 @@ class MacrosModule {
             // emit macros event back to server regardless
             this.emitMacrosEvent();
         });
-
-
-
-
-
-/*
-        // wrap the system status processing in a try catch, in case there's errors
-        try {
-            if (configManager.checkLogLevel('interval')) {
-                logger.info(`Processing device macros at ${ new Date().toLocaleTimeString() }`);
-            }
-
-            // get updated config from configManager
-            this.getUpdatedConfig();
-
-            // handle reboot
-            this.handleReboot();
-
-            // handle restart
-            this.handleRestart();
-
-            // handle update
-            this.handleUpdate();
-
-            // emit macros event back to server
-            this.emitMacrosEvent();
-
-            // log complete!
-            if (configManager.checkLogLevel('detail')) {
-                logger.info(`Completed processing device macros!`);
-            }
-
-            // emit an event that the MacrosModule finished
-            eventHub.emit('moduleStatus', { 
-                name: 'MacrosModule', 
-                status: 'operational',
-                data: 'Completed processing device macros!',
-            });
-        } catch (error) {
-            logger.error(`Error processing device macros: ${error}`);
-
-            // emit an event that we had an error
-            eventHub.emit('moduleStatus', { 
-                name: 'MacrosModule', 
-                status: 'errored',
-                data: `Error processing device macros: ${error}`,
-            });
-        }
-
-        */
     }
 
 
@@ -257,8 +207,6 @@ class MacrosModule {
                 this.rebootCommandSuccess = false;
                 this.rebootCommandResults = '';
 
-                console.log('No reboot queued from server.');
-
                 // resolve with a n/a message
                 resolve('No reboot queued from server.');
             }
@@ -334,8 +282,6 @@ class MacrosModule {
                 // otherwise, we don't need to restart, so ensure that restartCommandResults is reset
                 this.restartCommandSuccess = false;
                 this.restartCommandResults = '';
-
-                console.log('No restart queued from server.');
 
                 // resolve with a n/a message
                 resolve('No restart queued from server.');
@@ -416,8 +362,6 @@ class MacrosModule {
                 this.updateCommandSuccess = false;
                 this.updateCommandResults = '';
 
-                console.log('No update queued from server.');
-
                 // resolve with a n/a message
                 resolve('No update queued from server.');
             }
@@ -476,7 +420,7 @@ class MacrosModule {
             }
 
             // log macrosData before sending to network module
-            console.log('macrosData', macrosData);
+            // console.log('macrosData', macrosData);
 
             // emit a network event to let the server know about the macros statuses
             eventHub.emit('macrosStatus', macrosData);
