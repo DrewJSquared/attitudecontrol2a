@@ -18,7 +18,7 @@ const logger = new Logger('IDManager');
 
 
 // variables
-const ID_FILE_PATH = './';  // path to save the id JSON file to
+const ID_FILE_PATH = '../';  // path to save the id JSON file to
 const VERBOSE_LOGGING = false;
 
 

@@ -1153,28 +1153,38 @@
       "id": 410,
       "engineVersion": "2A",
       "showType": "Chase",
-      "direction": "Right to Left",
-      "speed": 20,
-      "size": 60,
+      "direction": "Left to Right",
+      "speed": 60,
+      "size": 21,
       "splits": 1,
       "transition": "Both Edges",
-      "transitionWidth": 0.08,
+      "transitionWidth": 0.7,
       "bounce": false,
       "colors": [
         {
-          "red": 34,
-          "green": 34,
-          "blue": 64
+          "red": 255,
+          "green": 192,
+          "blue": 203
         },
         {
-          "red": 112,
-          "green": 59,
-          "blue": 61
+          "red": 0,
+          "green": 255,
+          "blue": 255
         },
         {
-          "red": 45,
-          "green": 94,
-          "blue": 69
+          "red": 255,
+          "green": 192,
+          "blue": 203
+        },
+        {
+          "red": 240,
+          "green": 128,
+          "blue": 128
+        },
+        {
+          "red": 255,
+          "green": 10,
+          "blue": 222
         }
       ],
       "name": "Gamma Test Show"
