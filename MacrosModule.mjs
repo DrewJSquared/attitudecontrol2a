@@ -298,8 +298,8 @@ class MacrosModule {
             // check if an update command has been queued from the server
             if (this.updateQueuedFromServer == true) {
 
-                // tmp
-                console.log('update queued from server!');
+                // log that an update was queued
+                logger.info('Update queued from server!');
 
                 // Command to run the update
                 const command = './update.sh';
@@ -338,7 +338,8 @@ class MacrosModule {
                         // set the rebootCommandResults variable to the success output from console
                         this.updateCommandResults = results;
 
-                        console.log(results);
+                        // log the update results
+                        logger.info(`Update results: ${results}`);
 
                         // restart pm2 asyncronosly after 30 seconds.
                         // this is intended to give the network module a second to let the server know
