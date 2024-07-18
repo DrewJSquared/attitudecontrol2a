@@ -276,9 +276,15 @@ class MacrosModule {
 
                     // Get the last line, trimming any extra newline characters
                     const lastLine = lines[lines.length - 1].trim();
-
-
                     console.log('lastLine', lastLine);
+
+                    const lastLine2 = lines[lines.length - 2].trim();
+                    console.log('lastLine2', lastLine2);
+
+                    const lastLine3 = lines[lines.length - 3].trim();
+                    console.log('lastLine3', lastLine3);
+
+
 
                     console.log('NOW WOULD BE A GOOD TIME TO PM2 RESTART ALL');
                 }
