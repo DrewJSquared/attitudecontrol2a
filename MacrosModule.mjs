@@ -338,6 +338,8 @@ class MacrosModule {
                         // set the rebootCommandResults variable to the success output from console
                         this.updateCommandResults = results;
 
+                        console.log(results);
+
                         // restart pm2 asyncronosly after 30 seconds.
                         // this is intended to give the network module a second to let the server know
                         // that the update was successful before restarting pm2

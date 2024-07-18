@@ -25,4 +25,4 @@ rsync -av --remove-source-files $UNZIPPED_DIR/ $TARGET_DIR/
 # Clean up temporary files
 rm -rf $ZIP_FILE $TMP_DIR
 
-echo "Attitude update.sh script complete!"
+echo "NEW TEST 4 Attitude update.sh script complete!"
