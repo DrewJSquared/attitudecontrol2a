@@ -35,7 +35,7 @@ logger.info('System initializing at time ' + new Date());
 
 // initialize sACN (to ensure that we go to white DMX on fixtures)
 setTimeout(() => {
-	attitudeSACN.initialize(8);
+	attitudeSACN.initialize(16); // init with 16 universes
 }, 10);
 
 

@@ -70,7 +70,7 @@ class IdManager {
 
 			// if running on laptop, the failover values are different
 			if (LAPTOP_MODE) {
-				logger.info(`Failed over to LAPTOP_MODE default values of ID 1 and SN AC-0000001!`);
+				logger.warn(`Failed over to LAPTOP_MODE default values of ID 1 and SN AC-0000001!`);
 
 				this.id = 1;
 				this.serialnumber = 'AC-0000001';
