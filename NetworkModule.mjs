@@ -24,7 +24,7 @@ import idManager from './IdManager.mjs';
 // variables
 const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
 
-const USE_LOCALHOST = false;  // set to true to use the attitudelighting.test API_URL instead (FOR DEVELOPMENT ONLY)
+const USE_LOCALHOST = true;  // set to true to use the attitudelighting.test API_URL instead (FOR DEVELOPMENT ONLY)
 const LAPTOP_MODE = (process.platform == 'darwin');  // checks whether we're running on macos (laptop mode) or not
 
 const PING_INTERVAL = 1000;  // interval in ms to ping the server (should be 1000ms)
@@ -80,8 +80,13 @@ class NetworkModule {
 		this.errorCounter = 0;
 		this.filePath = MISSED_MESSAGES_FILE_PATH + 'missedNetworkMessages.json';
 		this.loadMissedNetworkMessagesFlag = true; 
-		// this has to be true. we have to assume, upon app start, that there have been missed messages, 
+		// this has to default to true. we have to assume, upon app start, that there have been missed messages, 
 		// and that the device was power cycled or something
+
+
+    	// keep a counter to increment the sequenceNumber for each log entry packet. 
+    	// the sequence number helps keep up with the order of logs for 
+    	this.logSequenceNumberCounter = 5;
     }
 
 
@@ -112,6 +117,7 @@ class NetworkModule {
         	timestamp: new Date(),
         	data: {
 				timestamp: new Date().toISOString(),
+				sequenceNumber: 1,
 				module: 'RESTART',
 				type: 'warn',
 				message: '--------------------------------------------------',
@@ -123,6 +129,7 @@ class NetworkModule {
         	timestamp: new Date(),
         	data: {
 				timestamp: new Date().toISOString(),
+				sequenceNumber: 2,
 				module: 'AttitudeControl2A',
 				type: 'info',
 				message: 'Attitude Control Device Firmware (2nd gen) v2.A',
@@ -134,6 +141,7 @@ class NetworkModule {
         	timestamp: new Date(),
         	data: {
 				timestamp: new Date().toISOString(),
+				sequenceNumber: 3,
 				module: 'AttitudeControl2A',
 				type: 'info',
 				message: 'Copyright 2024 Drew Shipps, J Squared Systems',
@@ -145,9 +153,10 @@ class NetworkModule {
         	timestamp: new Date(),
         	data: {
 				timestamp: new Date().toISOString(),
+				sequenceNumber: 4,
 				module: 'AttitudeControl2A',
 				type: 'info',
-				message: 'System initializing at time ' + new Date(),
+				message: 'System initializing on ' + new Date(),
 		    },
         });
 
@@ -237,7 +246,7 @@ class NetworkModule {
 		    }
 
 			// log a success message
-			if (configManager.checkLogLevel('interval')) {
+			if (configManager.checkLogLevel('minimal')) {
 	    		logger.info(`${response.status} ${response.statusText} request successful! Connected to attitude.lighting server!`);
 	    	}
 
@@ -361,7 +370,22 @@ class NetworkModule {
     // this function is bound to the event that's triggered when a 'log' is fired from the eventHub
     // it then grabs that log and adds it to the queue
     logListener(log) {
+    	// we need to add a sequence number to each log, but we can't do it in the logger module
+    	// because that module has a unique instance for each module it's used in, so the counter
+    	// wouldn't work across different modules.
+
+    	// instead, we add the sequence number here in the logListener function in the network module,
+    	// which only has one instance
+    	log.sequenceNumber = this.logSequenceNumberCounter;
+
+    	// now that we've added the sequence number, we can enque the data
         this.enqueueData('log', log);
+
+		// increment the sequence number counter
+		this.logSequenceNumberCounter++;
+
+		// not currently planning on resetting the logSequenceCounter here at all. it'll automatically
+		// be reset when the device is power cycled. 
     }
 
 
