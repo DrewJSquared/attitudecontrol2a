@@ -199,6 +199,9 @@ class AttitudeScheduler {
     processWeeklySchedule() {
     	// try to process the weekly schedule
     	try {
+    		// reset the weekly schedule variable to array of zeroes
+    		this.processedShowIds.defaultWeeklySchedule = new Array(MAX_ZONES_COUNT).fill(0);
+
     		// find the current schedule block
 		    const currentScheduleBlock = this.scheduleBlocks.find(block => 
 		        block.day === this.now.weekday &&
@@ -256,6 +259,9 @@ class AttitudeScheduler {
     processCustomScheduleBlocks() {
     	// try processing custom blocks
     	try {
+    		// reset the custom schedule blocks variable to array of zeroes
+    		this.processedShowIds.customScheduleBlocks = new Array(MAX_ZONES_COUNT).fill(0);
+
     		// iterate over each custom block
     		this.customBlocks.forEach(thisBlock => {
     			// variable to hold if this block applies to today
@@ -369,6 +375,9 @@ class AttitudeScheduler {
     processWebOverrides() {
     	// try processing web overrides
     	try {
+    		// reset the web overrides variable to array of zeroes
+    		this.processedShowIds.webOverrides = new Array(MAX_ZONES_COUNT).fill(0);
+
     		// loop through each web override in reverse order
 		    this.webOverrides.slice().reverse().forEach(webOverride => {
 		    	// if it's active
