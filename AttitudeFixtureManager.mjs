@@ -381,10 +381,8 @@ class AttitudeFixtureManager {
 
 		    // check to make sure this show exists
 		    if (typeof show !== 'undefined') {
-			    // check if this show is compatible with the current engine
+			    // check if this show is designed for the current engine
 			    if (show.engineVersion == '2A') {
-			    	// logger.info(`Show ${show.name} IS compatible with the new engine! Updating config now...`);
-
 			    	// if so, update the parameters on the engine to match the show
 		            engineInstance.engine.configure({
 			            showType: show.showType,
@@ -398,11 +396,7 @@ class AttitudeFixtureManager {
 			            colors: show.colors,
 			        });
 			    } else {
-			    	// otherwise log a warning about this show
-			    	// we're still going to process this show later, so that the fixtures it should run on will default 
-			    	// to gray (128,128,128) instead of black or no signal
-
-			    	// try to translate this show
+			    	// otherwise this show needs ot be translated to run properly.
 			    	try {
 				    	// this holds the new show names as keyed to match the old show type ids
 				    	let newShowTypes = ['Static', 'All', 'All', 'Chase', 'Chase', 'Chase'];
@@ -462,17 +456,10 @@ class AttitudeFixtureManager {
 				            colors: translatedColors,
 				        });
 
-			            // log that this show was not compatible but was translated properly
-	    				if (configManager.checkLogLevel('minimal')) {
-			    			logger.warn(`Show ${show.name} is not compatible with the new engine, but it was successfully translated!`);
+			            // log that this show was translated
+	    				if (configManager.checkLogLevel('detail')) {
+			    			logger.info(`Show ${show.name} was successfully translated to the new engine!`);
 			    		}
-
-				        // emit an event that we are in a degraded state, bcause this show is incompatible
-				        eventHub.emit('moduleStatus', { 
-				            name: 'AttitudeFixtureManager', 
-				            status: 'degraded',
-				            data: `Show ${show.name} is not compatible with the new engine, but it was successfully translated!`,
-				        });
 			        } catch (error) {
 			        	// otherwise log that we had an error translating it
 				    	// we're still going to process this show later, so that the fixtures it should run on will default 

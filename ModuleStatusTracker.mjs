@@ -18,7 +18,8 @@ import configManager from './ConfigManager.mjs';
 
 
 // variables
-const SAMPLE_INTERVAL = 15000;  // interval for how often to check module statuses (should be 15000ms)
+const SAMPLE_INTERVAL = 3000;  // interval for how often to check module statuses (should be 15000ms)
+const SEND_TO_NETWORK_INTERVAL = 15000; // interval for how often to send module statuses to the server
 const UNRESPONSIVE_THRESHOLD = 35;  // number of seconds before considering a module unresponsive
 
 
@@ -36,6 +37,10 @@ class ModuleStatusTracker {
 
         // variable to hold the overall status
         this.overallStatus = 'initializing';
+
+        // variable to hold the timestamp for the last sent packet
+        // initial value needs to be current time minus send interval, so that the first packet will send
+        this.lastStatusSentToNetworkTimestamp = (new Date() - SEND_TO_NETWORK_INTERVAL);
 
         // bind an event listener for each moduleStatus event
         eventHub.on('moduleStatus', this.moduleStatusListener.bind(this));
@@ -103,8 +108,18 @@ class ModuleStatusTracker {
             // TEMP log the current module status object
             // console.log('currentModuleStatus', currentModuleStatus);
 
-            // emit an event that the current system status has been processed (which should then be picked up by network module)
-            eventHub.emit('moduleStatusUpdate', currentModuleStatus);
+
+            // calculate the difference between the current time and the last time we sent data to the network
+            let difference = new Date() - this.lastStatusSentToNetworkTimestamp;
+
+            // if the difference is greater than the interval, we need to send to network again
+            if (difference > SEND_TO_NETWORK_INTERVAL) {
+                // emit an event that the current system status has been processed (which should then be picked up by network module)
+                eventHub.emit('moduleStatusUpdate', currentModuleStatus);
+
+                // save the current time to the last sent timestamp
+                this.lastStatusSentToNetworkTimestamp = new Date();
+            }            
         } catch (error) {
             logger.error(`Error processing status of all modules: ${error}`);
         }

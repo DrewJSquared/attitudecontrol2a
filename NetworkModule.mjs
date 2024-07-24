@@ -261,15 +261,15 @@ class NetworkModule {
     			// emit a moduleStatus event since we just reconnected
 	    		eventHub.emit('moduleStatus', { 
 	    			name: 'NetworkModule', 
-	    			status: 'reconnected',
-	    			data: '',
+	    			status: 'operational',
+	    			data: 'Successfully reconnected to the attitude.lighting server!',
 	    		});
     		} else {
     			// otherwise, we've been online, so emit a moduleStatus event that we are online
 	    		eventHub.emit('moduleStatus', { 
 	    			name: 'NetworkModule', 
 	    			status: 'online',
-	    			data: '',
+	    			data: 'Connected to the attitude.lighting server!',
 	    		});
     		}
 
