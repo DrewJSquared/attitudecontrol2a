@@ -24,7 +24,7 @@ import idManager from './IdManager.mjs';
 // variables
 const API_URL = 'https://attitude.lighting/api/v1/device/sync';  // URL to hit with a POST request
 
-const USE_LOCALHOST = true;  // set to true to use the attitudelighting.test API_URL instead (FOR DEVELOPMENT ONLY)
+const USE_LOCALHOST = false;  // set to true to use the attitudelighting.test API_URL instead (FOR DEVELOPMENT ONLY)
 const LAPTOP_MODE = (process.platform == 'darwin');  // checks whether we're running on macos (laptop mode) or not
 
 const PING_INTERVAL = 1000;  // interval in ms to ping the server (should be 1000ms)
