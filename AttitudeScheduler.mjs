@@ -105,10 +105,14 @@ class AttitudeScheduler {
     			logger.info('Processed schedule and determined final show ids: ' + JSON.stringify(this.processedShowIds?.final));
     		}
 
-			// emit an event that we properly processed the schedule
+    		// check if any part of processing the schedule failed, putting us in degraded mode
+    		let currentStatus = 'operational';
+    		if (this.degraded) { currentStatus = 'degraded'; }
+
+			// emit an event as to whether we are operational or degraded, but include processed show ids regardless
 	        eventHub.emit('moduleStatus', { 
 	            name: 'AttitudeScheduler', 
-	            status: 'operational',
+	            status: currentStatus,
 	            data: JSON.stringify(this.processedShowIds?.final),
 	        });
     	} catch (error) {
@@ -241,13 +245,10 @@ class AttitudeScheduler {
     		// else log error
             logger.error(`Error processing weekly schedule: ${error}`);
 
-			// emit an event that there was an error
-			// note that since this error only applies to processing the weekly schedule, we're only in a degraded state, not full failure
-	        eventHub.emit('moduleStatus', { 
-	            name: 'AttitudeScheduler', 
-	            status: 'degraded',
-	            data: `Error processing weekly schedule: ${error.message}`,
-	        });
+            // set degraded flag to true
+            // note that we're only going to emit an event after finishing processing the schedule
+            // so that we can still know the final show IDs being processed, even if part of the processing is degraded
+            this.degraded = true;
 
             // default array to zeroes, which will make this part of the schedule processing transparent
             this.processedShowIds.defaultWeeklySchedule = new Array(MAX_ZONES_COUNT).fill(0);
@@ -269,7 +270,11 @@ class AttitudeScheduler {
 
 				// validate that we aren't using the old type of custom block with singular month/days
 				if (thisBlock.month !== undefined && thisBlock.day !== undefined) {
-					throw new Error('Invalid type of custom schedule block. Please rebuild this block.');
+					let blockName = thisBlock?.name ?? 'no name found';
+					logger.warn('Custom block "' + blockName
+					 + '" was built prior to the introduction of start dates and end dates in custom schedule blocks. '
+					 + 'Please delete and rebuild this custom schedule block. (Skipping processing for this block)');
+					return;
 		        }
 
 		        // if the any of the month/day start/end values are undefined, throw an error
@@ -329,12 +334,8 @@ class AttitudeScheduler {
     		// else log error
             logger.error(`Error processing custom schedule blocks: ${error}`);
 
-			// emit an event that there was an error!
-	        eventHub.emit('moduleStatus', { 
-	            name: 'AttitudeScheduler', 
-	            status: 'degraded',
-	            data: `Error processing custom schedule blocks: ${error.message}`,
-	        });
+            // set degraded flag to true
+            this.degraded = true;
 
             // default array to zeroes, which will make this part of the schedule processing transparent
             this.processedShowIds.customScheduleBlocks = new Array(MAX_ZONES_COUNT).fill(0);
@@ -358,12 +359,8 @@ class AttitudeScheduler {
     		// else log error
             logger.error(`Error processing external overrides: ${error}`);
 
-			// emit an event that there was an error!
-	        eventHub.emit('moduleStatus', { 
-	            name: 'AttitudeScheduler', 
-	            status: 'degraded',
-	            data: `Error processing external overrides: ${error.message}`,
-	        });
+            // set degraded flag to true
+            this.degraded = true;
 
             // default array to zeroes, which will make this part of the schedule processing transparent
             this.processedShowIds.overrides = new Array(MAX_ZONES_COUNT).fill(0);
@@ -413,12 +410,8 @@ class AttitudeScheduler {
     		// else log error
             logger.error(`Error processing web overrides: ${error}`);
 
-			// emit an event that there was an error!
-	        eventHub.emit('moduleStatus', { 
-	            name: 'AttitudeScheduler', 
-	            status: 'degraded',
-	            data: `Error processing web overrides: ${error.message}`,
-	        });
+            // set degraded flag to true
+            this.degraded = true;
 
             // default array to zeroes, which will make this part of the schedule processing transparent
             this.processedShowIds.webOverrides = new Array(MAX_ZONES_COUNT).fill(0);
