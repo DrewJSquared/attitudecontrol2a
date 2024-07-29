@@ -379,6 +379,17 @@ class AttitudeScheduler {
 		    this.webOverrides.slice().reverse().forEach(webOverride => {
 		    	// if it's active
 		        if (webOverride.active) {
+		        	// if it doesn't have a web override assigned to it
+		        	if (webOverride.override_id == 0) {
+		        		// log a warning that this web override doesn't have an associated override
+				    	if (configManager.checkLogLevel('detail')) {
+				    		logger.warn(`Web override "${webOverride.name}" is active but doesn't have an override block selected!`);
+				    	}
+
+				    	// continue to the next override
+				    	return;
+		        	}
+
 			    	// log that we're running this web override
 			    	if (configManager.checkLogLevel('detail')) {
 			    		logger.info(`Running active web override "${webOverride.name}"`);
