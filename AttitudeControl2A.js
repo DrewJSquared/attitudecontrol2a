@@ -15,6 +15,7 @@ import attitudeScheduler from './AttitudeScheduler.mjs';
 import attitudeFixtureManager from './AttitudeFixtureManager.mjs';
 import attitudeSACN from './AttitudeSACN2A.mjs';
 import attitudeLED from './AttitudeLED2A.mjs';
+import attitudeSenseManager from './AttitudeSenseManager.mjs';
 
 import idManager from './IdManager.mjs';
 import configManager from './ConfigManager.mjs';
@@ -71,14 +72,22 @@ setTimeout(() => {
 	attitudeFixtureManager.init();
 }, 60);
 
+
 // initialize macros module
 setTimeout(() => {
 	macrosModule.init();
 }, 70);
 
+
+// initialize sense module
+setTimeout(() => {
+	attitudeSenseManager.init();
+}, 80);
+
+
 // initialization sequence complete!
 setTimeout(() => {
 	logger.info('Device initialization sequence complete!');
-}, 80);
+}, 90);
 
 

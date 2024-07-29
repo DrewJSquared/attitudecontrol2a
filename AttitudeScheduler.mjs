@@ -14,6 +14,7 @@ const logger = new Logger('AttitudeScheduler');
 
 import eventHub from './EventHub.mjs';
 import configManager from './ConfigManager.mjs';
+import attitudeSenseManager from './AttitudeSenseManager.mjs';
 
 import { DateTime } from 'luxon';
 
@@ -352,6 +353,13 @@ class AttitudeScheduler {
 		    if (configManager.checkLogLevel('detail')) {
     			logger.warn(`Overrides processing hasn't yet been implemented!`);
     		}
+
+
+
+
+    		// attitudeSenseManager.getSensePortDataById(id);
+
+
 
 			this.processedShowIds.overrides = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     		
