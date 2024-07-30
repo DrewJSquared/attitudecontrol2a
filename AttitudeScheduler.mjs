@@ -71,12 +71,7 @@ class AttitudeScheduler {
             this.processSchedule();
         }, PROCESS_SCHEDULE_INTERVAL);
 
-        // bind the processSchedule function to the senseData event
-        // so that we process the schedule one time, immediately, whenever a sense packet is received
-        eventHub.on('senseData', this.processSchedule.bind(this));
-
-        // log that  we initialized the scheduler
-        logger.info('Initialized the scheduler, processSchedule interval, and Attitude Sense event handler!');
+        logger.info('Initialized the scheduler and started the processSchedule interval!');
 
 		// emit an event that we initialized the scheduler
         eventHub.emit('moduleStatus', { 
