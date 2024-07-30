@@ -41,25 +41,37 @@ class AttitudeSenseManager {
 
 	// initialize the client for receiving data from attitude sense units
 	init() {
-		// log that we are initializing the client (optional)
-		// logger.info(`Initializing UDP client for receiving data from Attitude Sense devices.`);
+		try {
+			// log that we are initializing the client (optional)
+			// logger.info(`Initializing UDP client for receiving data from Attitude Sense devices.`);
 
-		// create this.client to hold the client & bind it to the UDP port number
-		this.client = dgram.createSocket('udp4');
-		this.client.bind(UDP_PORT);
+			// create this.client to hold the client & bind it to the UDP port number
+			this.client = dgram.createSocket('udp4');
+			this.client.bind(UDP_PORT);
 
-		// attach a hanlder function to the message received function
-		this.client.on('message', this.handleMessage);
+			// attach a hanlder function to the message received function
+			this.client.on('message', this.handleMessage);
 
-		// log that we completed the initialization process
-        logger.info('Completed initialization of UDP client for receiving data from Attitude Sense devices.');
+			// log that we completed the initialization process
+	        logger.info('Completed initialization of UDP client for receiving data from Attitude Sense devices.');
 
-		// emit an event that we initialized the client for UDP
-        eventHub.emit('moduleStatus', { 
-            name: 'AttitudeSenseManager', 
-            status: 'operational',
-            data: '',
-        });
+			// emit an event that we initialized the client for UDP
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeSenseManager', 
+	            status: 'operational',
+	            data: '',
+	        });
+	    } catch (error) {
+			// log that we failed to initialize
+	        logger.error(`Failed to initialize UDP client! ${error}`);
+
+			// emit an event that we initialized the client for UDP
+	        eventHub.emit('moduleStatus', { 
+	            name: 'AttitudeSenseManager', 
+	            status: 'errored',
+	            data: `Failed to initialize UDP client! ${error}`,
+	        });
+	    }
 	}
 
 
