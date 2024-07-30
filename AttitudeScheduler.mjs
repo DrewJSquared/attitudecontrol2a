@@ -348,6 +348,9 @@ class AttitudeScheduler {
     processOverrides() {
     	// try processing overrides
     	try {
+    		// reset the overrides variable to array of zeroes
+    		this.processedShowIds.overrides = new Array(MAX_ZONES_COUNT).fill(0);
+
     		// grab the attitude senses from the config manager
     		let attitudeSenses = configManager.getAttitudeSenses();
 
