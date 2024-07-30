@@ -76,8 +76,10 @@ class AttitudeSenseManager {
 
     		// if detail log level, log that we just got a status packet
 			if (configManager.checkLogLevel('detail')) {
-    			logger.info('Received a status packet from Attitude Sense ID: ' + object.ID);
+    			logger.info(`New packet from sense ID: ${object.ID} with data ${object.DATA}`);
     		}
+
+    		// console.log(`New packet from sense ID: ${object.ID} with data ${object.DATA}`);
 
     		// update the map with the most recent packet from each sense
             this.mostRecentPacketFromEachSense.set(object.ID, object);
@@ -102,7 +104,7 @@ class AttitudeSenseManager {
 
     		// if interval log level, log that we finished processing the packet
 			if (configManager.checkLogLevel('interval')) {
-    			logger.info('Processed status packet from Attitude Sense ID: ' + object.ID);
+    			logger.info(`Processed packet from sense ID: ${object.ID} with data ${object.DATA}`);
     		}
 
     		// always emit a module status event

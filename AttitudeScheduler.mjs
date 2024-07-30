@@ -362,6 +362,8 @@ class AttitudeScheduler {
     			// get the most up-to-date port data from the Attitude Sense manager
     			let sensePortData = attitudeSenseManager.getSensePortDataById(attitudeSense.id);
 
+    			// console.log(`Processing sense ID : ${attitudeSense.id}, port data ${sensePortData}`)
+
 			    // iterate over each sense port and add a portNumber to it
 			    for (let p = 0; p < attitudeSense.data.length; p++) {
 			    	attitudeSense.data[p].portNumber = p + 1;
