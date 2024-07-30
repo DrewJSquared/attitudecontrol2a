@@ -348,21 +348,82 @@ class AttitudeScheduler {
     processOverrides() {
     	// try processing overrides
     	try {
+    		// grab the attitude senses from the config manager
+    		let attitudeSenses = configManager.getAttitudeSenses();
 
-    		// TODO IMPLEMENT OVERRIDES HERE
+    		// grab the overrides from the config manager
+    		let overrides = configManager.getOverrides();
+
+    		// iterate over each sense
+    		attitudeSenses.forEach(attitudeSense => {
+    			// get the most up-to-date port data from the Attitude Sense manager
+    			let sensePortData = attitudeSenseManager.getSensePortDataById(attitudeSense.id);
+
+			    // iterate over each sense port and add a portNumber to it
+			    for (let p = 0; p < attitudeSense.data.length; p++) {
+			    	attitudeSense.data[p].portNumber = p + 1;
+			    }
+
+    			// sort the ports by priority (if priority exists).
+    			// sort order is by priority, then reverse order. meaning port 1 is top priority
+    			let ports = attitudeSense.data;
+			    let sortedPorts = ports.sort((a, b) => {
+			        const aPriority = (typeof a.priority === 'number') ? a.priority : Infinity;
+			        const bPriority = (typeof b.priority === 'number') ? b.priority : Infinity;
+
+			        // If priorities are different, sort by priority
+			        if (aPriority !== bPriority) {
+			            return aPriority - bPriority;
+			        }
+			        // If priorities are the same or not found, sort by original index (reverse order)
+			        return ports.indexOf(b) - ports.indexOf(a);
+			    });
+
+			    // iterate over the sorted ports
+			    sortedPorts.forEach(port => {
+			    	// find the whether this port is active or not
+			    	// based on whether this port number (-1 for 0 based counting) in the array is true or false
+			    	let isThisPortActive = sensePortData[port.portNumber - 1] ?? false;
+
+			    	// if this port is not active, just return
+			    	if (!isThisPortActive) {
+			    		return;
+			    	}
+
+		    		// if there's no override assigned to this port, just return
+		    		if (parseInt(port.override_id) == 0) {
+		    			return;
+		    		}
+
+		    		// find the override that is associated to this port
+		    		let override = overrides.find(override => override.id === parseInt(port.override_id));
+
+		    		// if no override found, log an error and return
+		    		if (override === undefined) {
+		    			logger.error(`Couldn't find an override with id ${port.override_id}!`);
+		    			return;
+		    		}
+
+	    			// check port mode
+	    			if (port.mode == 'toggle') {
+	    				// grab the showdata from the override
+	    				let showsdata = JSON.parse(override.showsdata);
+
+	    				// layer the showdata onto the overrides layer
+	    				this.processedShowIds.overrides = this.layerAnOverride(this.processedShowIds.overrides, showsdata);
+	    			} else if (port.mode == 'pulse') {
+	    				// if it's pulse
+
+	    			} else {
+	    				logger.error(`Unknown port mode ${port.mode}!`);
+	    			}
+			    });
+			});
+
+		    // log that we finished (optional)
 		    if (configManager.checkLogLevel('detail')) {
-    			logger.warn(`Overrides processing hasn't yet been implemented!`);
-    		}
-
-
-
-
-    		// attitudeSenseManager.getSensePortDataById(id);
-
-
-
-			this.processedShowIds.overrides = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    		
+			    logger.info('Processed overrides: ' + JSON.stringify(this.processedShowIds.overrides));
+			}
     	} catch (error) {
     		// else log error
             logger.error(`Error processing external overrides: ${error}`);

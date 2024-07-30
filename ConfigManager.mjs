@@ -245,6 +245,11 @@ class ConfigManager {
 		return this.config.overrides ?? [];
 	}
 	
+	// senses
+	getAttitudeSenses() {
+		return this.config.attitudeSenses ?? [];
+	}
+	
 	// webOverrides
 	getWebOverrides() {
 		return this.config.webOverrides ?? [];
