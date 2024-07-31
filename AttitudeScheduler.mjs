@@ -71,6 +71,9 @@ class AttitudeScheduler {
             this.processSchedule();
         }, PROCESS_SCHEDULE_INTERVAL);
 
+
+        eventHub.on('senseData', this.senseDataListener.bind(this));
+
         logger.info('Initialized the scheduler and started the processSchedule interval!');
 
 		// emit an event that we initialized the scheduler
@@ -79,6 +82,11 @@ class AttitudeScheduler {
             status: 'operational',
             data: '[]',
         });
+    }
+
+    senseDataListener() {
+    	console.log('sense data listener');
+    	this.processSchedule();
     }
 
     // process the schedule at regular intervals
