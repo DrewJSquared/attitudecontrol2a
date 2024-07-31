@@ -21,7 +21,7 @@ import { DateTime } from 'luxon';
 
 
 // ==================== VARIABLES ====================
-const PROCESS_SCHEDULE_INTERVAL = 250;  // interval speed for recalculating the schedule in milliseconds
+const PROCESS_SCHEDULE_INTERVAL = 1000;  // interval speed for recalculating the schedule in milliseconds
 // might make this something configurable by the server later
 const MAX_ZONES_COUNT = 10;  // max number of zones in the patch
 const LOG_INDIVIDUAL_SCHEDULE_LEVELS = false;
@@ -71,8 +71,8 @@ class AttitudeScheduler {
             this.processSchedule();
         }, PROCESS_SCHEDULE_INTERVAL);
 
-
-        eventHub.on('senseData', this.senseDataListener.bind(this));
+        // TODO: fully implement sense data listener
+        // eventHub.on('senseData', this.senseDataListener.bind(this));
 
         logger.info('Initialized the scheduler and started the processSchedule interval!');
 
@@ -84,10 +84,10 @@ class AttitudeScheduler {
         });
     }
 
-    senseDataListener() {
-    	console.log('sense data listener');
-    	this.processSchedule();
-    }
+    // senseDataListener() {
+    // 	console.log('sense data listener');
+    // 	this.processSchedule();
+    // }
 
     // process the schedule at regular intervals
     processSchedule() {
@@ -375,8 +375,6 @@ class AttitudeScheduler {
 
     			// console.log(`Processing sense ID : ${attitudeSense.id}, port data ${sensePortData}`)
 
-    			// console.log(`id ${attitudeSense.id} data ${sensePortData}`)
-
 			    // iterate over each sense port and add a portNumber to it
 			    for (let p = 0; p < attitudeSense.data.length; p++) {
 			    	attitudeSense.data[p].portNumber = p + 1;
@@ -396,8 +394,6 @@ class AttitudeScheduler {
 			        // If priorities are the same or not found, sort by original index (reverse order)
 			        return ports.indexOf(b) - ports.indexOf(a);
 			    });
-
-			    // console.log(ports);
 
 			    // iterate over the sorted ports
 			    sortedPorts.forEach(port => {

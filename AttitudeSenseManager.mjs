@@ -194,18 +194,13 @@ class AttitudeSenseManager {
 	        // Retrieve the data packet for the given ID
 	        const dataPacket = this.mostRecentPacketFromEachSense.get(intId);
 
-	        const result = this.processSensePortData(dataPacket.DATA);
-	        // console.log(result);
-
 	        // Convert the DATA string to an array
-	        return result;
+	        return this.processSensePortData(dataPacket.DATA);
 	    } else {
     		// if detail log level, log that this sense couldn't be found
 			if (configManager.checkLogLevel('detail')) {
     			logger.warn(`getSensePortDataById: Sense ID ${id} couldn't be found!`);
     		}
-
-	        // console.log(`req for id ${id} not found`);
 
 	        // Return an array of 16 zeroes if the ID is not found
 	        return Array(16).fill(0);
