@@ -59,6 +59,9 @@ class AttitudeScheduler {
         this.processedShowIds.webOverrides = new Array(MAX_ZONES_COUNT).fill(0);
         this.processedShowIds.final = new Array(MAX_ZONES_COUNT).fill(0);
 
+        // variable to hold the previous set of sense data
+        // this.lastSenseData = new Map();
+
         // setup variable to hold the interval
         this.processScheduleInterval;
 	}
@@ -68,10 +71,14 @@ class AttitudeScheduler {
     init() {
         // Start the scheduling interval to run processSchedule function
         this.processScheduleInterval = setInterval(() => {
+        	console.log('-- INTERVAL SCHEDULE');
             this.processSchedule();
         }, PROCESS_SCHEDULE_INTERVAL);
 
         logger.info('Initialized the scheduler and started the processSchedule interval!');
+
+        // bind to sense data
+        eventHub.on('senseData', this.senseDataListener.bind(this));
 
 		// emit an event that we initialized the scheduler
         eventHub.emit('moduleStatus', { 
@@ -79,6 +86,13 @@ class AttitudeScheduler {
             status: 'operational',
             data: '[]',
         });
+    }
+
+
+    // senseDataListener
+    senseDataListener() {
+    	console.log('!! NEW SENSE DATA! PROCESS SCHEDULE');
+        this.processSchedule();
     }
 
 

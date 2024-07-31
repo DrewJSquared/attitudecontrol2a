@@ -91,7 +91,7 @@ class AttitudeSenseManager {
     			logger.info(`New packet from sense ID: ${object.ID} with data ${object.DATA}`);
     		}
 
-    		// console.log(`New packet from sense ID: ${object.ID} with data ${object.DATA}`);
+    		console.log(`New packet from sense ID: ${object.ID} with data ${object.DATA}`);
 
     		// update the map with the most recent packet from each sense
             this.mostRecentPacketFromEachSense.set(object.ID, object);
