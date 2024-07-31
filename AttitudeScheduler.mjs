@@ -71,14 +71,10 @@ class AttitudeScheduler {
     init() {
         // Start the scheduling interval to run processSchedule function
         this.processScheduleInterval = setInterval(() => {
-        	console.log('-- INTERVAL SCHEDULE');
             this.processSchedule();
         }, PROCESS_SCHEDULE_INTERVAL);
 
         logger.info('Initialized the scheduler and started the processSchedule interval!');
-
-        // bind to sense data
-        eventHub.on('senseData', this.senseDataListener.bind(this));
 
 		// emit an event that we initialized the scheduler
         eventHub.emit('moduleStatus', { 
@@ -87,14 +83,6 @@ class AttitudeScheduler {
             data: '[]',
         });
     }
-
-
-    // senseDataListener
-    senseDataListener() {
-    	console.log('!! NEW SENSE DATA! PROCESS SCHEDULE');
-        this.processSchedule();
-    }
-
 
     // process the schedule at regular intervals
     processSchedule() {
