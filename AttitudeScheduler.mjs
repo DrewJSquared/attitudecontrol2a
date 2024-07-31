@@ -21,7 +21,7 @@ import { DateTime } from 'luxon';
 
 
 // ==================== VARIABLES ====================
-const PROCESS_SCHEDULE_INTERVAL = 1000;  // interval speed for recalculating the schedule in milliseconds
+const PROCESS_SCHEDULE_INTERVAL = 250;  // interval speed for recalculating the schedule in milliseconds
 // might make this something configurable by the server later
 const MAX_ZONES_COUNT = 10;  // max number of zones in the patch
 const LOG_INDIVIDUAL_SCHEDULE_LEVELS = false;
