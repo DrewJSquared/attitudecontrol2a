@@ -187,19 +187,25 @@ class AttitudeSenseManager {
 	// default response if ID is not found is array of zeroes so that no ports will be active
 	getSensePortDataById(id) {
 		// Convert the ID to an integer
-	    const intId = parseInt(id, 10);
+	    const intId = parseInt(id);
 
 		// Check if the ID exists in the map
 	    if (this.mostRecentPacketFromEachSense.has(intId)) {
 	        // Retrieve the data packet for the given ID
 	        const dataPacket = this.mostRecentPacketFromEachSense.get(intId);
+
+	        const result = this.processSensePortData(dataPacket.DATA);
+	        // console.log(result);
+
 	        // Convert the DATA string to an array
-	        return this.processSensePortData(dataPacket.DATA);
+	        return result;
 	    } else {
     		// if detail log level, log that this sense couldn't be found
 			if (configManager.checkLogLevel('detail')) {
     			logger.warn(`getSensePortDataById: Sense ID ${id} couldn't be found!`);
     		}
+
+	        // console.log(`req for id ${id} not found`);
 
 	        // Return an array of 16 zeroes if the ID is not found
 	        return Array(16).fill(0);

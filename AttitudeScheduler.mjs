@@ -59,9 +59,6 @@ class AttitudeScheduler {
         this.processedShowIds.webOverrides = new Array(MAX_ZONES_COUNT).fill(0);
         this.processedShowIds.final = new Array(MAX_ZONES_COUNT).fill(0);
 
-        // variable to hold the previous set of sense data
-        // this.lastSenseData = new Map();
-
         // setup variable to hold the interval
         this.processScheduleInterval;
 	}
@@ -354,7 +351,11 @@ class AttitudeScheduler {
     		this.processedShowIds.overrides = new Array(MAX_ZONES_COUNT).fill(0);
 
     		// grab the attitude senses from the config manager
-    		let attitudeSenses = configManager.getAttitudeSenses();
+    		// i hate javascript
+    		// because i had to use JSON.parse/stringify to make a full copy of the attitudeSenses object
+    		// so that the stuff we do later in this function doesn't screw it up
+    		// causing the override_id for some ports to flicker
+    		let attitudeSenses = JSON.parse(JSON.stringify(configManager.getAttitudeSenses()));
 
     		// grab the overrides from the config manager
     		let overrides = configManager.getOverrides();
@@ -365,6 +366,8 @@ class AttitudeScheduler {
     			let sensePortData = attitudeSenseManager.getSensePortDataById(attitudeSense.id);
 
     			// console.log(`Processing sense ID : ${attitudeSense.id}, port data ${sensePortData}`)
+
+    			// console.log(`id ${attitudeSense.id} data ${sensePortData}`)
 
 			    // iterate over each sense port and add a portNumber to it
 			    for (let p = 0; p < attitudeSense.data.length; p++) {
@@ -385,6 +388,8 @@ class AttitudeScheduler {
 			        // If priorities are the same or not found, sort by original index (reverse order)
 			        return ports.indexOf(b) - ports.indexOf(a);
 			    });
+
+			    // console.log(ports);
 
 			    // iterate over the sorted ports
 			    sortedPorts.forEach(port => {
@@ -426,6 +431,8 @@ class AttitudeScheduler {
 	    			}
 			    });
 			});
+
+		    // console.error('Processed overrides: ' + JSON.stringify(this.processedShowIds.overrides));
 
 		    // log that we finished (optional)
 		    if (configManager.checkLogLevel('detail')) {
