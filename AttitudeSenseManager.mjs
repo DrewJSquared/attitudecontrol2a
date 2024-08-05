@@ -42,6 +42,7 @@ class AttitudeSenseManager {
 	// initialize the client for receiving data from attitude sense units
 	init() {
 		try {
+			/*
 			// log that we are initializing the client (optional)
 			// logger.info(`Initializing UDP client for receiving data from Attitude Sense devices.`);
 
@@ -54,6 +55,10 @@ class AttitudeSenseManager {
 
 			// log that we completed the initialization process
 	        logger.info('Completed initialization of UDP client for receiving data from Attitude Sense devices.');
+	*/
+
+	        logger.warn('AttitudeSenseManager CURRENTLY DISABLED TEMPORARILY');
+			
 
 			// emit an event that we initialized the client for UDP
 	        eventHub.emit('moduleStatus', { 
