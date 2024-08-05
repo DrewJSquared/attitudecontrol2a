@@ -102,8 +102,10 @@ class AttitudeScheduler {
     		// process each component of the schedule
     		this.processWeeklySchedule();
     		this.processCustomScheduleBlocks();
-    		this.processOverrides();
+    		// this.processOverrides();
     		this.processWebOverrides();
+
+    		logger.warn('process overrides disabled temporarily!!!!!');
 
     		// layer the schedule
     		this.layerScheduleToCreateFinal();
