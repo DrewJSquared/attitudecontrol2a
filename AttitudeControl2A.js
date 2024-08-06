@@ -65,7 +65,7 @@ setTimeout(() => {
 	moduleStatusTracker.init();
 }, 50);
 
-/*
+
 // initialize schedule and fixtures
 setTimeout(() => {
 	attitudeScheduler.init();
@@ -78,7 +78,7 @@ setTimeout(() => {
 	macrosModule.init();
 }, 70);
 
-
+/*
 // initialize sense module
 setTimeout(() => {
 	attitudeSenseManager.init();
