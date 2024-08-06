@@ -78,16 +78,15 @@ setTimeout(() => {
 	macrosModule.init();
 }, 70);
 
-/*
+
 // initialize sense module
 setTimeout(() => {
 	attitudeSenseManager.init();
 }, 80);
-*/
+
 
 // initialization sequence complete!
 setTimeout(() => {
-	logger.warn('TEMPORARY Device initialization sequence complete!');
 	logger.info('Device initialization sequence complete!');
 }, 90);
 
