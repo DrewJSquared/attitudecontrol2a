@@ -58,7 +58,7 @@ setTimeout(() => {
 	attitudeLED.init();
 }, 40);
 
-
+/*
 // initialize status trackers
 setTimeout(() => {
 	statusTracker.init();
@@ -83,10 +83,11 @@ setTimeout(() => {
 setTimeout(() => {
 	attitudeSenseManager.init();
 }, 80);
-
+*/
 
 // initialization sequence complete!
 setTimeout(() => {
+	logger.warn('TEMPORARY Device initialization sequence complete!');
 	logger.info('Device initialization sequence complete!');
 }, 90);
 
