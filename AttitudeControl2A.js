@@ -58,14 +58,14 @@ setTimeout(() => {
 	attitudeLED.init();
 }, 40);
 
-/*
+
 // initialize status trackers
 setTimeout(() => {
 	statusTracker.init();
 	moduleStatusTracker.init();
 }, 50);
 
-
+/*
 // initialize schedule and fixtures
 setTimeout(() => {
 	attitudeScheduler.init();
