@@ -11,7 +11,7 @@ Unzip the downloaded file
 `unzip attitudecontrol2a.zip -d attitudecontrol2a_tmp`
 
 Move the contents to the attitudecontrol2a directory
-`rsync -av --remove-source-files attitudecontrol2a_tmp/attitudecontrol2a-main/ ./`
+`rsync -av --remove-source-files attitudecontrol2a_tmp/attitudecontrol2a-main/ ./attitudecontrol2a`
 
 Clean up temporary files
 `rm -rf attitudecontrol2a.zip attitudecontrol2a_tmp`
