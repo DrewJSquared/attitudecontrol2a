@@ -143,7 +143,7 @@ class MacrosModule {
                 if (!LAPTOP_MODE) {
 
                     // Command to schedule a restart in 1 minute
-                    const command = 'sudo shutdown -h +1';
+                    const command = 'sudo shutdown -r +1';
 
                     // Execute the command
                     exec(command, (error, stdout, stderr) => {
