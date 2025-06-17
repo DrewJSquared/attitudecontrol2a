@@ -51,6 +51,9 @@ class AttitudeScheduler {
 		this.overrides = [];
 		this.webOverrides = [];
 
+        // setup variable to hold active pulse override objects
+        this.activePulseOverrides = [];
+
 		// setup variables to hold the processed show ids lists. ex: [104, 1, 0, 37, 0]
 		this.processedShowIds = {};
 		this.processedShowIds.defaultWeeklySchedule = new Array(MAX_ZONES_COUNT).fill(0);
@@ -71,8 +74,8 @@ class AttitudeScheduler {
             this.processSchedule();
         }, PROCESS_SCHEDULE_INTERVAL);
 
-        // TODO: fully implement sense data listener
-        // eventHub.on('senseData', this.senseDataListener.bind(this));
+        // bind senseDataListener callback to senseData event emitted
+        eventHub.on('senseData', this.senseDataListener.bind(this));
 
         logger.info('Initialized the scheduler and started the processSchedule interval!');
 
@@ -84,10 +87,22 @@ class AttitudeScheduler {
         });
     }
 
-    // senseDataListener() {
-    // 	console.log('sense data listener');
-    // 	this.processSchedule();
-    // }
+    // function that listents for new sense data. bound to eventHub in init()
+    senseDataListener() {
+    	// process the schedule an extra time, since new data came in from the sense
+    	//  - this is intended to catch quick bursts coming from the sense for pulse triggers
+    	// 	  that might not otherwise be caught by the standard once per second processing of the schedule
+    	//  - this could be a potential cause of unecesary load spent processing the schedule, 
+    	//    but idk if it'll be an issue
+
+		// log that we're processing the schedule from the sense data listener
+		if (configManager.checkLogLevel('interval')) {
+			logger.info('Processing schedule from sense data listener callback...');
+		}
+
+		// actuall process schedule
+    	this.processSchedule();
+    }
 
     // process the schedule at regular intervals
     processSchedule() {
@@ -373,7 +388,7 @@ class AttitudeScheduler {
     			// get the most up-to-date port data from the Attitude Sense manager
     			let sensePortData = attitudeSenseManager.getSensePortDataById(attitudeSense.id);
 
-    			// console.log(`Processing sense ID : ${attitudeSense.id}, port data ${sensePortData}`)
+    			// console.log(`----- Processing sense ID : ${attitudeSense.id}, port data ${sensePortData} -----`)
 
 			    // iterate over each sense port and add a portNumber to it
 			    for (let p = 0; p < attitudeSense.data.length; p++) {
@@ -401,15 +416,12 @@ class AttitudeScheduler {
 			    	// based on whether this port number (-1 for 0 based counting) in the array is true or false
 			    	let isThisPortActive = sensePortData[port.portNumber - 1] ?? false;
 
-			    	// if this port is not active, just return
-			    	if (!isThisPortActive) {
-			    		return;
-			    	}
-
-		    		// if there's no override assigned to this port, just return
-		    		if (parseInt(port.override_id) == 0) {
-		    			return;
-		    		}
+		    		// if there's no override assigned to this port, skip to next port
+		    		// - updated this validation to account for null
+		    		const portOverrideId = parseInt(port.override_id);
+					if (!Number.isInteger(portOverrideId) || portOverrideId <= 0) {
+						return;
+					}
 
 		    		// find the override that is associated to this port
 		    		let override = overrides.find(override => override.id === parseInt(port.override_id));
@@ -422,14 +434,116 @@ class AttitudeScheduler {
 
 	    			// check port mode
 	    			if (port.mode == 'toggle') {
-	    				// grab the showdata from the override
-	    				let showsdata = JSON.parse(override.showsdata);
+	    				// if the port is active, then we need to layer in the override
+	    				if (isThisPortActive) {
+		    				// grab the showdata from the override
+		    				let showsdata = JSON.parse(override.showsdata);
 
-	    				// layer the showdata onto the overrides layer
-	    				this.processedShowIds.overrides = this.layerAnOverride(this.processedShowIds.overrides, showsdata);
+		    				// layer the showdata onto the overrides layer
+		    				this.processedShowIds.overrides = this.layerAnOverride(this.processedShowIds.overrides, showsdata);
+	    				}
 	    			} else if (port.mode == 'pulse') {
 	    				// if it's pulse
 
+	    				// if the port is active, then we need to update the activePulseOverrides list
+	    				if (isThisPortActive) {
+
+	    					// Parse duration
+							var duration = parseInt(port.timeLength, 10);
+							if (!Number.isInteger(duration) || duration <= 0) {
+		    					logger.error(`Invalid duration for port ${port.portNumber} override id ${override.id}`);
+								return;
+							}
+
+							// Get current time
+							var now = new Date();
+							var activeUntil = new Date(now);
+
+							// Add time based on timeMode
+							switch (port.timeMode) {
+								case 'sec':
+									activeUntil.setSeconds(activeUntil.getSeconds() + duration);
+									break;
+								case 'min':
+									activeUntil.setMinutes(activeUntil.getMinutes() + duration);
+									break;
+								case 'hour':
+									activeUntil.setHours(activeUntil.getHours() + duration);
+									break;
+								default:
+									console.warn("Invalid timeMode");
+									return;
+							}
+
+							// calculate the difference in seconds for logging below
+							let diff = new Date(activeUntil) - now;
+							diff = Math.round(diff/1000);
+
+						    // log that the override was just activated for x seconds
+						    if (configManager.checkLogLevel('detail')) {
+							    logger.info(`New pulse override (sense id ${attitudeSense.id}, port ${port.portNumber}) was just activated for ${diff} seconds.`);
+							}
+
+							// try to find an existing override and update it
+							const existing = this.activePulseOverrides.find(o =>
+								o.attitudeSenseId === attitudeSense.id &&
+								o.portNumber === port.portNumber
+							);
+
+							// check if existing was found
+							if (existing) {
+								// if so, update the activeUntil time on it
+								existing.activeUntil = activeUntil;
+							} else {
+								// or add a new override
+								this.activePulseOverrides.push({
+									attitudeSenseId: attitudeSense.id,
+									portNumber: port.portNumber,
+									activeUntil: activeUntil
+								});
+							}
+	    				}
+
+
+	    				// regardless of port active or not, we need to check if its active in the activePulseOverrides list
+	    				let currentTime = new Date();
+
+	    				// attempt to find the relevant activePulseOverride
+						const found = this.activePulseOverrides.find(o =>
+							o.attitudeSenseId === attitudeSense.id &&
+							o.portNumber === port.portNumber
+						);
+
+						if (found) {
+							// if it's currently active (because date is less than activeUntil)
+							if (currentTime < new Date(found.activeUntil)) {
+								// calculate the difference in seconds for logging below
+								let diff = new Date(found.activeUntil) - currentTime;
+								diff = Math.round(diff/1000);
+
+							    // log that the override is active for x more seconds
+							    if (configManager.checkLogLevel('detail')) {
+								    logger.info(`Pulse override (sense id ${found.attitudeSenseId}, port ${found.portNumber}) is currently active for ${diff} more seconds.`);
+								}
+
+			    				// grab the showdata from the override
+			    				let showsdata = JSON.parse(override.showsdata);
+
+			    				// layer the showdata onto the overrides layer
+			    				this.processedShowIds.overrides = this.layerAnOverride(this.processedShowIds.overrides, showsdata);
+							} else {
+							    // log that the override expired and we removed it
+							    if (configManager.checkLogLevel('detail')) {
+								    logger.info(`Removing active pulse override (sense id ${found.attitudeSenseId}, port ${found.portNumber}) from list because it expired.`);
+								}
+
+								// otherwise remove the expired override
+								const index = this.activePulseOverrides.indexOf(found);
+								if (index !== -1) {
+									this.activePulseOverrides.splice(index, 1);
+								}
+							}
+						}
 	    			} else {
 	    				logger.error(`Unknown port mode ${port.mode}!`);
 	    			}
