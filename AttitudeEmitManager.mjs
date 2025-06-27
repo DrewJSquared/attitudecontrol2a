@@ -45,18 +45,6 @@ class AttitudeEmitManager {
 				this.broadcastEmitAssignments();
 			}, BROADCAST_EMIT_ASSIGNMENTS_DELAY);
 
-			// set interval to send test packets every 3 seconds
-			// setInterval(() => {
-			// 	const testPacket = {
-			// 		DEST_TYPE: 2,
-			// 		DEST_ID: 1,
-			// 		UNIVERSE_SET: Math.floor(Math.random() * 4) + 1,
-			// 		IDENTIFY: Math.random() < 0.5
-			// 	};
-
-			// 	udpManager.send(testPacket);
-			// }, 3000);
-
 			// log success
 			logger.info('Completed initialization of Attitude Emit Manager.');
 
@@ -112,7 +100,8 @@ class AttitudeEmitManager {
 				id: object.ID,
 				version: object.VERSION,
 				packet_no: object.PACKET_NO,
-				universe: object.UNIVERSE,
+				reported_universe: object.UNIVERSE,
+				reported_identify_mode: object.IDENTIFY,
 				errors: object.ERRORS || '',
 			};
 
