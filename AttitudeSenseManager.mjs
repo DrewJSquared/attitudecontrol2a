@@ -20,7 +20,7 @@ const logger = new Logger('AttitudeSenseManager');
 
 // ==================== VARIABLES ====================
 const LAPTOP_MODE = (process.platform == 'darwin');
-const UDP_PORT = '6455'; // MUST BE 6455 because all sense devices are hard coded to that port
+
 
 
 
@@ -33,9 +33,9 @@ class AttitudeSenseManager {
 		// create an array to hold the most recent packet from each sense
 		this.mostRecentPacketFromEachSense = new Map();
 
-        // Bind the handleMessage function to the current instance
-        // this fixes the issues with calling this.validateSenseDataObject() inside handleMessage
-        this.handleMessage = this.handleMessage.bind(this);
+        // Bind the handleNewSenseData function to the current instance
+        // this fixes the issues with calling this.validateSenseDataObject() inside handleNewSenseData
+        this.handleNewSenseData = this.handleNewSenseData.bind(this);
 	}
 
 
@@ -43,17 +43,13 @@ class AttitudeSenseManager {
 	init() {
 		try {
 			// log that we are initializing the client (optional)
-			// logger.info(`Initializing UDP client for receiving data from Attitude Sense devices.`);
-
-			// create this.client to hold the client & bind it to the UDP port number
-			this.client = dgram.createSocket('udp4');
-			this.client.bind(UDP_PORT);
+			// logger.info(`Initializing Attitude Sense Manager...`);
 
 			// attach a hanlder function to the message received function
-			this.client.on('message', this.handleMessage);
+			eventHub.on('receivedUDP', this.handleNewSenseData);
 
 			// log that we completed the initialization process
-	        logger.info('Completed initialization of UDP client for receiving data from Attitude Sense devices.');
+	        logger.info('Completed initialization of Attitude Sense Manager for listening to Attitude Sense devices.');
 
 			// emit an event that we initialized the client for UDP
 	        eventHub.emit('moduleStatus', { 
@@ -75,20 +71,24 @@ class AttitudeSenseManager {
 	}
 
 
-	// function to handle a message received from the client
-	handleMessage(message, info) {
+	// handleNewSenseData - function to handle the data packet received from the sense
+	handleNewSenseData(object) {
 		// wrap the processing logic in a try catch in case of errors
 		try {
-			// turn the message into a JS object
-			let messageString = message.toString();
-			let object = JSON.parse(messageString);
+			// skip packets that are not from TYPE 1 devices (i.e. not from Attitude Sense units)
+			if (object?.TYPE !== 1) {
+				if (configManager.checkLogLevel('detail')) {
+					logger.info(`Skipped non-sense UDP packet or invalid TYPE: ${object?.TYPE}`);
+				}
+				return;
+			}
 
 			// validate the packet
 			this.validateSenseDataObject(object);
 
     		// if detail log level, log that we just got a status packet
 			if (configManager.checkLogLevel('detail')) {
-    			logger.info(`New packet from sense ID: ${object.ID} with data ${object.DATA}`);
+    			logger.info(`New packet of TYPE=1 from sense ID: ${object.ID} with data ${object.DATA}`);
     		}
 
     		// console.log(`New packet from sense ID: ${object.ID} with data ${object.DATA}`);

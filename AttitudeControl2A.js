@@ -16,6 +16,7 @@ import attitudeFixtureManager from './AttitudeFixtureManager.mjs';
 import attitudeSACN from './AttitudeSACN2A.mjs';
 import attitudeLED from './AttitudeLED2A.mjs';
 import attitudeSenseManager from './AttitudeSenseManager.mjs';
+import attitudeEmitManager from './AttitudeEmitManager.mjs';
 
 import idManager from './IdManager.mjs';
 import configManager from './ConfigManager.mjs';
@@ -23,6 +24,7 @@ import networkModule from './NetworkModule.mjs';
 import statusTracker from './StatusTracker.mjs';
 import moduleStatusTracker from './ModuleStatusTracker.mjs';
 import macrosModule from './MacrosModule.mjs';
+import udpManager from './UDPManager.mjs';
 
 
 
@@ -79,15 +81,22 @@ setTimeout(() => {
 }, 70);
 
 
-// initialize sense module
+// initialize UDP Manager
+setTimeout(() => {
+	udpManager.init();
+}, 80);
+
+
+// initialize sense and emit modules
 setTimeout(() => {
 	attitudeSenseManager.init();
-}, 80);
+	attitudeEmitManager.init();
+}, 90);
 
 
 // initialization sequence complete!
 setTimeout(() => {
 	logger.info('Device initialization sequence complete!');
-}, 90);
+}, 100);
 
 

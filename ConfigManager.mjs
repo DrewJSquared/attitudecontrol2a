@@ -250,6 +250,11 @@ class ConfigManager {
 		return this.config.attitudeSenses ?? [];
 	}
 	
+	// emits
+	getAttitudeEmits() {
+		return this.config.attitudeEmits ?? [];
+	}
+	
 	// webOverrides
 	getWebOverrides() {
 		return this.config.webOverrides ?? [];
