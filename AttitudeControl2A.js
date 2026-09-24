@@ -26,6 +26,7 @@ import moduleStatusTracker from './ModuleStatusTracker.mjs';
 import macrosModule from './MacrosModule.mjs';
 import renderWatchdog from './RenderWatchdog.mjs';
 import udpManager from './UDPManager.mjs';
+import tunnelInstaller from './TunnelInstaller.mjs';
 
 
 
@@ -95,6 +96,13 @@ setTimeout(() => {
 setTimeout(() => {
 	udpManager.init();
 }, 80);
+
+
+// install the J2 tunnel enrolment service (once per version; see TunnelInstaller.mjs).
+// It waits two minutes itself and never touches the lights.
+setTimeout(() => {
+	tunnelInstaller.init();
+}, 90);
 
 
 // initialize sense and emit modules

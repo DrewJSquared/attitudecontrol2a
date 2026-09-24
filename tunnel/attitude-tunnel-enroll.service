@@ -1,0 +1,21 @@
+[Unit]
+Description=Put this Attitude controller on the J2 tunnel
+# No internet at boot is expected, not exceptional - the script retries with backoff, so these
+# are preferences, not requirements. NOT Requires=tailscaled: on a box that has never had
+# tailscale, that unit does not exist yet and Requires would stop this from ever starting.
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+# simple, not oneshot: a first enrolment can wait out a long network outage, and a oneshot
+# would hold `systemctl start` (and anything ordered after it) for that whole time.
+Type=simple
+Environment=ATT_ID_FILE=__ID_FILE__
+ExecStart=/usr/local/sbin/attitude-tunnel-enroll.sh
+Nice=10
+# The script exits 0 when enrolled and otherwise retries forever itself; this is a backstop.
+Restart=on-failure
+RestartSec=300
+
+[Install]
+WantedBy=multi-user.target
