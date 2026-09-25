@@ -9,6 +9,8 @@
 //                          server's hostname and --accept-dns=false, then `set --ssh`
 //   409 name taken         does NOT enrol; backs off to the maximum
 //   server down            does NOT enrol; retries with backoff
+//   tunnel server unreachable  2.A.22: no key requested; curl's reason reported to the website
+//   tailscale up fails     2.A.22: bounded by --timeout, output reported, a fresh key next pass
 //   install, first time    copies both files, substitutes the id path, enables and starts
 //   install, second time   writes nothing (a current device must not wear its SD card)
 //
@@ -27,7 +29,7 @@ const POSIX = process.platform !== 'win32';
 const SKIP = POSIX ? false : 'needs a POSIX host: executes bash scripts';
 const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'tunnel');
 
-function fakes({ enrolled = false, httpCode = 200, body = '' } = {}) {
+function fakes({ enrolled = false, httpCode = 200, body = '', probeExit = 0, probeMsg = '', upFail = false } = {}) {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tunnel-sh-'));
     const bin = path.join(dir, 'bin');
     fs.mkdirSync(bin);
@@ -37,13 +39,17 @@ function fakes({ enrolled = false, httpCode = 200, body = '' } = {}) {
 echo "tailscale $*" >> "${calls}"
 case "$1" in
   ip) if [ -f "${dir}/enrolled" ]; then echo 100.64.0.99; else exit 1; fi ;;
-  up) touch "${dir}/enrolled" ;;
+  up) ${upFail ? 'echo "timeout waiting for Tailscale service to enter a Running state; check health with \"tailscale status\""; exit 1' : `touch "${dir}/enrolled"`} ;;
   version) echo 1.102.4 ;;
 esac
 exit 0
 `);
     w('curl', `#!/bin/bash
 echo "curl $*" >> "${calls}"
+case "$*" in
+  */health*) [ "${probeExit}" = 0 ] || { echo "curl: (${probeExit}) ${probeMsg}" >&2; exit ${probeExit}; }; exit 0 ;;
+  *tunnel-report*) exit 0 ;;
+esac
 printf '%s\\n%s' '${body.replace(/'/g, "'\\''")}' '${httpCode}'
 `);
     w('sleep', '#!/bin/bash\necho "sleep $*" >> "' + calls + '"\n');
@@ -177,4 +183,65 @@ test('install.sh: second run writes nothing and does not reload', { skip: IS_ROO
 test('install.sh: refuses an id path that is not an id.json', { skip: POSIX ? false : SKIP }, () => {
     const r = spawnSync('bash', [path.join(ROOT, 'install.sh'), ROOT, '/etc/shadow'], { encoding: 'utf8' });
     assert.notEqual(r.status, 0);
+});
+
+
+// ---- 2.A.22: reachability probe, bounded up, reports ----
+
+const reports = calls => calls.split('\n').filter(l => l.includes('tunnel-report'))
+    .map(l => JSON.parse(l.slice(l.indexOf('-d ') + 3)));
+
+test('2.A.22: tunnel server does not resolve - no key requested, the reason is reported', { skip: SKIP }, () => {
+    const f = fakes({ body: GOOD, probeExit: 6, probeMsg: 'Could not resolve host: net.attitude.lighting' });
+    const r = enroll(f);
+    assert.doesNotMatch(r.calls, /tunnel-key/, 'an unreachable tunnel server must not cost a key');
+    assert.doesNotMatch(r.calls, /tailscale up/);
+    const rep = reports(r.calls);
+    assert.ok(rep.length >= 1, 'must report');
+    assert.equal(rep[0].stage, 'preflight');
+    assert.equal(rep[0].code, 6);
+    assert.equal(rep[0].device_id, 179);
+    assert.equal(rep[0].serialnumber, 'AC-0020139');
+    assert.match(rep[0].detail, /curl=6 curl: \(6\) Could not resolve host/);
+    assert.match(rep[0].detail, /resolves=/);
+    assert.match(rep[0].detail, /nameservers=/);
+    assert.match(r.log, /cannot reach https:\/\/net\.attitude\.lighting/);
+    assert.match(r.calls, /sleep 60/, 'still backs off');
+});
+
+test('2.A.22: handshake reset (hostname filter) is reported as curl 35', { skip: SKIP }, () => {
+    const f = fakes({ body: GOOD, probeExit: 35, probeMsg: 'OpenSSL SSL_connect: Connection reset by peer' });
+    const rep = reports(enroll(f).calls);
+    assert.equal(rep[0].code, 35);
+    assert.match(rep[0].detail, /Connection reset by peer/);
+});
+
+test('2.A.22: tailscale up is bounded, and a failure is reported without the key', { skip: SKIP }, () => {
+    const f = fakes({ body: GOOD, upFail: true });
+    const r = enroll(f);
+    const ups = r.calls.split('\n').filter(l => l.startsWith('tailscale up'));
+    assert.ok(ups.length >= 2, 'a failed up retries with a fresh key');
+    assert.match(ups[0], /--timeout=120s/);
+    assert.equal(r.calls.split('\n').filter(l => /tunnel-key/.test(l)).length, ups.length, 'one key per attempt');
+    const rep = reports(r.calls).filter(x => x.stage === 'up');
+    assert.ok(rep.length >= 1);
+    assert.equal(rep[0].code, 1);
+    assert.match(rep[0].detail, /timeout waiting for Tailscale/);
+    assert.match(rep[0].detail, /probe: reachable/);
+    assert.doesNotMatch(JSON.stringify(rep), /hskey/);
+    assert.match(r.log, /tailscale up failed \(exit 1\)/);
+});
+
+test('2.A.22: a successful enrolment is reported, and the report is valid JSON', { skip: SKIP }, () => {
+    const f = fakes({ body: GOOD });
+    const r = enroll(f);
+    const rep = reports(r.calls);
+    assert.equal(rep.length, 1);
+    assert.equal(rep[0].stage, 'enrolled');
+    assert.match(rep[0].detail, /attitudecontrol-0020139 100\.64\.0\.99/);
+});
+
+test('2.A.22: already enrolled - no probe, no report, nothing sent anywhere', { skip: SKIP }, () => {
+    const f = fakes({ enrolled: true });
+    assert.doesNotMatch(enroll(f).calls, /^curl/m);
 });
