@@ -41,6 +41,7 @@ MAX_PASSES="${ATT_TUNNEL_MAX_PASSES:-0}"      # 0 = forever. Tests only.
 # own login_server answer is used for the enrolment itself; this is only the reachability probe.
 LOGIN_PROBE="${ATT_TUNNEL_LOGIN_SERVER:-https://net.attitude.lighting}"
 UP_TIMEOUT="${ATT_TUNNEL_UP_TIMEOUT:-120s}"
+DAEMON_WAIT="${ATT_TUNNEL_DAEMON_WAIT:-30}"
 
 backoff="$BACKOFF_MIN"
 passes=0
@@ -86,6 +87,34 @@ report() {   # report <stage> <code> <detail>
     body="{\"device_id\":$DEVICE_ID,\"serialnumber\":\"$SERIAL\",\"stage\":\"$1\",\"code\":${2:-0},\"detail\":\"$(clean "$3")\"}"
     curl --silent --max-time 10 -o /dev/null -X POST "$BASE_HOST/api/v1/device/tunnel-report" \
         -H 'Content-Type: application/json' -H 'Accept: application/json' -d "$body" 2>/dev/null || true
+}
+
+# tailscaled's LocalAPI answers once the daemon is up; `status --json` always carries BackendState.
+daemon_state() { timeout 10 tailscale status --json 2>/dev/null | grep -o '"BackendState": *"[^"]*"' | head -1 | cut -d'"' -f4; }
+
+restart_daemon() {
+    systemctl restart tailscaled >>"$LOG" 2>&1 || say "could not restart tailscaled"
+    local w=0
+    while [ "$w" -lt "$DAEMON_WAIT" ]; do
+        [ -n "$(daemon_state)" ] && { say "tailscaled restarted, state $(daemon_state)"; return 0; }
+        sleep 2; w=$((w + 2))
+    done
+    say "tailscaled did not answer within ${DAEMON_WAIT}s of a restart"
+}
+
+# What tailscaled itself knows, for the report: its state, version, the disk it keeps state on,
+# and the last few lines of its own log that name control, the network or an error. Short
+# fields first - the report is cut at 400 characters and the journal lines are the longest.
+daemon_facts() {
+    local st ver disk jr
+    st="$(daemon_state)"
+    ver="$(tailscale version 2>/dev/null | head -1)"
+    # A full SD card stops tailscaled writing its state. /var/lib if the state dir does not exist yet.
+    disk="$(df -P "$( [ -d /var/lib/tailscale ] && echo /var/lib/tailscale || echo /var/lib )" 2>/dev/null | awk 'NR==2{print $5}')"
+    jr="$(journalctl -u tailscaled --since '-4min' -o cat --no-pager 2>/dev/null \
+        | grep -iE 'control|login|auth|netmon|network|link|dial|error|fail|paused|state' \
+        | tail -3 | cut -c1-110 | paste -sd'~' -)"
+    echo "state=${st:-none} ver=${ver:-none} disk=${disk:-?} | log: ${jr:-none}"
 }
 
 # Can this box reach the tunnel server at all? Sets PROBE_CODE (curl's exit status) and
@@ -213,6 +242,13 @@ while true; do
     # from exactly this line.
     say "enrolling as $HOSTNAME_T against $SERVER"
 
+    # 2.A.23: a fresh tailscaled for every attempt. AC-0020104, 2026-09-26: with the tunnel server
+    # reachable from the box (our own probe, twice) and a valid key, `up` waited its full two
+    # minutes and tailscaled never sent a single request to the server - yet a freshly started
+    # tailscaled on the same box had contacted it at 01:01 that morning. A box that is not
+    # enrolled has nothing depending on tailscaled, so restarting it costs nothing.
+    restart_daemon
+
     # --reset: tailscale refuses to run over partial state whose flags differ, with a wall of text.
     # --accept-dns=false: this controller must keep resolving attitude.lighting through the site's
     #   own DNS; a VPN client has no business rewriting it on a customer network.
@@ -241,6 +277,10 @@ while true; do
     # 2026-09-26 and then went silent after `up`; this line is what tells those cases apart.
     HEALTH="$(tailscale status 2>&1 | sed -n '/^# Health check:/,/^[^#]/p' | grep '^#' | grep -v '^# Health check:' | sed 's/^#[[:space:]-]*//' | head -3 | tr '\n' ' ')"
     say "tailscale health: ${HEALTH:-none reported}"
-    report up "$UP_RC" "health: ${HEALTH:-none} | up: $(echo "$UP_OUT" | tail -2 | tr '\n' ' ') | probe: ${PROBE_DETAIL:-reachable}"
+    FACTS="$(daemon_facts)"
+    say "tailscaled: $FACTS"
+    # `up`'s own words are in the device log; its one known failure text ("timeout waiting for
+    # Tailscale service to enter a Running state") told us nothing twice, so it goes last.
+    report up "$UP_RC" "health: ${HEALTH:-none} | $FACTS | probe: ${PROBE_DETAIL:-reachable} | up: $(echo "$UP_OUT" | tail -1)"
     wait_and_retry || exit 1
 done

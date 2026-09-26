@@ -41,7 +41,7 @@ case "$1" in
   ip) if [ -f "${dir}/enrolled" ]; then echo 100.64.0.99; else exit 1; fi ;;
   up) ${upFail ? 'echo "timeout waiting for Tailscale service to enter a Running state; check health with \"tailscale status\""; exit 1' : `touch "${dir}/enrolled"`} ;;
   version) echo 1.102.4 ;;
-  status) ${upFail ? `printf '# Health check:\\n#     - not connected to control: dial tcp: lookup net.attitude.lighting: no such host\\n\\n100.64.0.99 x\\n'` : 'true'} ;;
+  status) [ "$2" = --json ] && { echo '{"Version": "1.102.4", "BackendState": "NeedsLogin"}'; exit 0; }; ${upFail ? `printf '# Health check:\\n#     - not connected to control: dial tcp: lookup net.attitude.lighting: no such host\\n\\n100.64.0.99 x\\n'` : 'true'} ;;
 esac
 exit 0
 `);
@@ -54,6 +54,8 @@ esac
 printf '%s\\n%s' '${body.replace(/'/g, "'\\''")}' '${httpCode}'
 `);
     w('sleep', '#!/bin/bash\necho "sleep $*" >> "' + calls + '"\n');
+    w('systemctl', '#!/bin/bash\necho "systemctl $*" >> "' + calls + '"\n');
+    w('journalctl', '#!/bin/bash\necho "control: controlclient paused (waiting for network)"\necho "magicsock: unrelated chatter"\n');
     if (enrolled) fs.writeFileSync(path.join(dir, 'enrolled'), '');
     const idFile = path.join(dir, 'id.json');
     fs.writeFileSync(idFile, '{"device_id":179,"serialnumber":"AC-0020139"}');
@@ -248,4 +250,34 @@ test('2.A.22: a successful enrolment is reported, and the report is valid JSON',
 test('2.A.22: already enrolled - no probe, no report, nothing sent anywhere', { skip: SKIP }, () => {
     const f = fakes({ enrolled: true });
     assert.doesNotMatch(enroll(f).calls, /^curl/m);
+});
+
+
+// ---- 2.A.23: fresh tailscaled per attempt, and tailscaled's own facts in the report ----
+
+test('2.A.23: restarts tailscaled before every enrolment attempt, after the key, before up', { skip: SKIP }, () => {
+    const f = fakes({ body: GOOD, upFail: true });
+    const lines = enroll(f).calls.split('\n');
+    const restarts = lines.map((l, i) => l === 'systemctl restart tailscaled' ? i : -1).filter(i => i >= 0);
+    const ups = lines.map((l, i) => l.startsWith('tailscale up') ? i : -1).filter(i => i >= 0);
+    assert.ok(ups.length >= 2);
+    assert.equal(restarts.length, ups.length, 'one restart per attempt');
+    const firstKey = lines.findIndex(l => /tunnel-key/.test(l));
+    assert.ok(firstKey < restarts[0] && restarts[0] < ups[0], 'key, then restart, then up');
+});
+
+test('2.A.23: an enrolled box never restarts tailscaled', { skip: SKIP }, () => {
+    const f = fakes({ enrolled: true });
+    assert.doesNotMatch(enroll(f).calls, /systemctl restart/);
+});
+
+test('2.A.23: a failed up reports tailscaled state, version, disk and its own log lines', { skip: SKIP }, () => {
+    const f = fakes({ body: GOOD, upFail: true });
+    const r = enroll(f);
+    const rep = reports(r.calls).filter(x => x.stage === 'up')[0];
+    assert.match(rep.detail, /state=NeedsLogin ver=1\.102\.4 disk=\d+%/);
+    assert.match(rep.detail, /log: control: controlclient paused \(waiting for network\)/);
+    assert.doesNotMatch(rep.detail, /magicsock/, 'only lines about control, the network or errors');
+    assert.ok(rep.detail.length <= 400);
+    assert.match(r.log, /tailscaled restarted, state NeedsLogin/);
 });
