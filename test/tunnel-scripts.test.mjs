@@ -347,3 +347,28 @@ test('2.A.24: no pin present - an ordinary box never runs a lookup or writes hos
     assert.doesNotMatch(r.calls, /getent/);
     assert.equal(fs.statSync(f.hostsFile).mtimeMs, before);
 });
+
+
+// ---- 2.A.25: SSH on whenever the box is found enrolled ----
+
+test('2.A.25: an enrolled box turns tailscale ssh on (idempotent) and asks for no key', { skip: SKIP }, () => {
+    const f = fakes({ enrolled: true });
+    const r = enroll(f);
+    assert.match(r.calls, /^tailscale set --ssh$/m);
+    assert.doesNotMatch(r.calls, /tunnel-key/);
+    assert.doesNotMatch(r.calls, /tunnel-report/, 'a box enrolled at boot reports nothing');
+});
+
+test('2.A.25: registration finishing after up timed out - ssh on, and reported as enrolled', { skip: SKIP }, () => {
+    const f = fakes({ body: GOOD, upFail: true });
+    // up fails, but the node joins anyway before the next pass (as 0020104 did)
+    const ts = path.join(f.bin, 'tailscale');
+    fs.writeFileSync(ts, fs.readFileSync(ts, 'utf8').replace(/  up\) .*;;/, `  up) touch "${f.dir}/enrolled"; echo "timeout waiting for Tailscale service to enter a Running state"; exit 1 ;;`));
+    const r = enroll(f);
+    const lines = r.calls.split('\n');
+    assert.equal(lines.filter(l => l.startsWith('tailscale up')).length, 1, 'no second key or up once joined');
+    assert.match(r.calls, /^tailscale set --ssh$/m);
+    const rep = reports(r.calls);
+    assert.deepEqual(rep.map(x => x.stage), ['up', 'enrolled']);
+    assert.match(rep[1].detail, /100\.64\.0\.99 joined after up timed out/);
+});

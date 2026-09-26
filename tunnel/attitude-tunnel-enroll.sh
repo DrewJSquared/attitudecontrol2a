@@ -79,6 +79,11 @@ wait_and_retry() {
 
 enrolled_ip() { tailscale ip -4 2>/dev/null | head -1; }
 
+# Tailscale SSH on, every time we find the box enrolled. `set --ssh` used to run only straight
+# after a successful `up`; a box whose registration finished after `up` timed out (0020104,
+# 2026-09-26) joined the tunnel with SSH off, unreachable by `tailscale ssh`. Idempotent.
+ensure_ssh() { tailscale set --ssh >>"$LOG" 2>&1 || say "could not turn on tailscale ssh"; }
+
 # One line, safe inside a JSON string: no quotes, backslashes or control characters, bounded.
 # shellcheck disable=SC1003  # '"\\' is a literal quote and backslash for tr
 clean() { printf '%s' "$*" | tr -d '"\\' | tr -c '[:print:]' ' ' | cut -c1-400; }
@@ -227,7 +232,7 @@ say "waiting up to ${STARTUP_WAIT}s for an existing tunnel identity..."
 waited=0
 while [ "$waited" -lt "$STARTUP_WAIT" ]; do
     ip="$(enrolled_ip)"
-    if [ -n "$ip" ]; then say "already enrolled as $ip - nothing to do"; exit 0; fi
+    if [ -n "$ip" ]; then say "already enrolled as $ip"; ensure_ssh; exit 0; fi
     sleep 2
     waited=$((waited + 2))
 done
@@ -239,7 +244,14 @@ say "no existing identity after ${STARTUP_WAIT}s - enrolling"
 while true; do
 
     ip="$(enrolled_ip)"
-    if [ -n "$ip" ]; then say "already enrolled as $ip - nothing to do"; exit 0; fi
+    if [ -n "$ip" ]; then
+        say "already enrolled as $ip"
+        ensure_ssh
+        # Registration can complete AFTER `up` gave up: AC-0020104, 2026-09-26, joined seconds after
+        # its 120 s timeout once the hosts pin let tailscaled resolve the server. Say so upstream.
+        [ -n "${ATTEMPTED:-}" ] && report enrolled 0 "$ip joined after up timed out $(pinned_ip | sed 's/^/pin=/')"
+        exit 0
+    fi
 
     # id.json: {"device_id": 179, "serialnumber": "AC-0020139"} - device_id may be quoted.
     # Parsed without jq or node: not guaranteed on a bare card, and the app may be the broken thing.
@@ -313,6 +325,7 @@ while true; do
     # --timeout: without it `up` waits forever for a control server it cannot reach (0020104,
     #   2026-09-25). Bounded, a hang becomes a logged, reported failure and a fresh key next pass.
     # The key is an argument, never written to disk: single-use, 15 minutes, no other users.
+    ATTEMPTED=1
     UP_OUT="$(tailscale up --reset --login-server="$SERVER" --authkey="$KEY" \
             --hostname="$HOSTNAME_T" --accept-dns=false --timeout="$UP_TIMEOUT" 2>&1)"
     UP_RC=$?
