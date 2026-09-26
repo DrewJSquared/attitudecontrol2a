@@ -41,6 +41,7 @@ case "$1" in
   ip) if [ -f "${dir}/enrolled" ]; then echo 100.64.0.99; else exit 1; fi ;;
   up) ${upFail ? 'echo "timeout waiting for Tailscale service to enter a Running state; check health with \"tailscale status\""; exit 1' : `touch "${dir}/enrolled"`} ;;
   version) echo 1.102.4 ;;
+  status) ${upFail ? `printf '# Health check:\\n#     - not connected to control: dial tcp: lookup net.attitude.lighting: no such host\\n\\n100.64.0.99 x\\n'` : 'true'} ;;
 esac
 exit 0
 `);
@@ -228,6 +229,9 @@ test('2.A.22: tailscale up is bounded, and a failure is reported without the key
     assert.equal(rep[0].code, 1);
     assert.match(rep[0].detail, /timeout waiting for Tailscale/);
     assert.match(rep[0].detail, /probe: reachable/);
+    assert.match(rep[0].detail, /^health: not connected to control: dial tcp: lookup net\.attitude\.lighting: no such host/,
+        "tailscaled's own reason comes first, so the 400-character cut never drops it");
+    assert.match(r.log, /tailscale health: not connected to control/);
     assert.doesNotMatch(JSON.stringify(rep), /hskey/);
     assert.match(r.log, /tailscale up failed \(exit 1\)/);
 });

@@ -235,6 +235,12 @@ while true; do
     # Probe again: tells "server unreachable from tailscale's side" from "reachable, but tailscale
     # itself failed". The key text never appears in `up` output, and clean() bounds the rest.
     probe "$SERVER"
-    report up "$UP_RC" "$(echo "$UP_OUT" | tail -2 | tr '\n' ' ') | probe: ${PROBE_DETAIL:-reachable}"
+    # tailscaled's own account of why it is not connected ("# Health check:" lines from
+    # `tailscale status`), first: it names the failing step - a DNS lookup, a dial, a TLS error -
+    # which neither `up`'s output nor our probe can. 0020104 reached the server at boot on
+    # 2026-09-26 and then went silent after `up`; this line is what tells those cases apart.
+    HEALTH="$(tailscale status 2>&1 | sed -n '/^# Health check:/,/^[^#]/p' | grep '^#' | grep -v '^# Health check:' | sed 's/^#[[:space:]-]*//' | head -3 | tr '\n' ' ')"
+    say "tailscale health: ${HEALTH:-none reported}"
+    report up "$UP_RC" "health: ${HEALTH:-none} | up: $(echo "$UP_OUT" | tail -2 | tr '\n' ' ') | probe: ${PROBE_DETAIL:-reachable}"
     wait_and_retry || exit 1
 done
