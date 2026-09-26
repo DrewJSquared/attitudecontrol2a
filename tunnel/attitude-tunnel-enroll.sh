@@ -20,6 +20,13 @@
 # and every retry backs off - nothing in this firmware may hammer a server.
 #
 # Does NOT set the OS hostname. --hostname names the machine on the tunnel only.
+#
+# 2.A.22: every failure the website cannot otherwise see is REPORTED to it. The first field
+# enrolment (AC-0020104, 2026-09-25) got its key over attitude.lighting and then never reached
+# net.attitude.lighting - and with no tunnel and no serveo there was no way to ask the box why.
+# attitude.lighting is by definition reachable from any box that got as far as a key, so that
+# is where the reason goes. `tailscale up` is also bounded now: unbounded, one unreachable
+# control server held the script silently forever.
 
 set -uo pipefail   # NOT -e: failure means wait and retry, never exit.
 
@@ -30,6 +37,10 @@ STARTUP_WAIT="${ATT_TUNNEL_STARTUP_WAIT:-60}"
 BACKOFF_MIN="${ATT_TUNNEL_BACKOFF_MIN:-60}"
 BACKOFF_MAX="${ATT_TUNNEL_BACKOFF_MAX:-3600}"
 MAX_PASSES="${ATT_TUNNEL_MAX_PASSES:-0}"      # 0 = forever. Tests only.
+# Checked BEFORE a key is requested, so an unreachable tunnel server costs no key. The server's
+# own login_server answer is used for the enrolment itself; this is only the reachability probe.
+LOGIN_PROBE="${ATT_TUNNEL_LOGIN_SERVER:-https://net.attitude.lighting}"
+UP_TIMEOUT="${ATT_TUNNEL_UP_TIMEOUT:-120s}"
 
 backoff="$BACKOFF_MIN"
 passes=0
@@ -63,6 +74,40 @@ wait_and_retry() {
 }
 
 enrolled_ip() { tailscale ip -4 2>/dev/null | head -1; }
+
+# One line, safe inside a JSON string: no quotes, backslashes or control characters, bounded.
+# shellcheck disable=SC1003  # '"\\' is a literal quote and backslash for tr
+clean() { printf '%s' "$*" | tr -d '"\\' | tr -c '[:print:]' ' ' | cut -c1-400; }
+
+# Tell the website what happened. Best effort by definition: a failed report changes nothing.
+# Never carries the key. DEVICE_ID/SERIAL are set before any call site.
+report() {   # report <stage> <code> <detail>
+    local body
+    body="{\"device_id\":$DEVICE_ID,\"serialnumber\":\"$SERIAL\",\"stage\":\"$1\",\"code\":${2:-0},\"detail\":\"$(clean "$3")\"}"
+    curl --silent --max-time 10 -o /dev/null -X POST "$BASE_HOST/api/v1/device/tunnel-report" \
+        -H 'Content-Type: application/json' -H 'Accept: application/json' -d "$body" 2>/dev/null || true
+}
+
+# Can this box reach the tunnel server at all? Sets PROBE_CODE (curl's exit status) and
+# PROBE_DETAIL. curl's exit status is what separates the causes a site network can have:
+#    6  the name does not resolve        (site DNS filters or cannot see net.attitude.lighting)
+#    7  connection refused / no route
+#   28  timed out                        (packets silently dropped)
+#   35  TLS handshake reset              (a web filter that blocks by hostname)
+#   60  certificate not trusted          (a firewall intercepting TLS - tailscale will fail too)
+# Any HTTP answer at all, even an error status, means reachable.
+probe() {
+    local url="$1" host err
+    host="${url#*://}"; host="${host%%/*}"
+    err="$(curl --silent --show-error --max-time 15 -o /dev/null "$url/health" 2>&1)"
+    PROBE_CODE=$?
+    [ "$PROBE_CODE" = 0 ] && { PROBE_DETAIL=""; return 0; }
+    local ip ns
+    ip="$(getent hosts "$host" 2>/dev/null | awk '{print $1}' | head -1)"
+    ns="$(awk '/^nameserver/{print $2}' /etc/resolv.conf 2>/dev/null | paste -sd, -)"
+    PROBE_DETAIL="curl=$PROBE_CODE $(echo "$err" | head -1); resolves=${ip:-none}; nameservers=${ns:-none}"
+    return 1
+}
 
 say "--- starting ---"
 
@@ -120,6 +165,15 @@ while true; do
         continue
     fi
 
+    # Reachability first. A box that cannot reach the tunnel server must not burn a key on every
+    # pass, and must say why - to the website it CAN reach.
+    if ! probe "$LOGIN_PROBE"; then
+        say "cannot reach $LOGIN_PROBE: $PROBE_DETAIL"
+        report preflight "$PROBE_CODE" "$PROBE_DETAIL"
+        wait_and_retry || exit 1
+        continue
+    fi
+
     RAW="$(curl --silent --show-error --max-time 20 -w '\n%{http_code}' \
         -X POST "$BASE_HOST/api/v1/device/tunnel-key" \
         -H 'Content-Type: application/json' -H 'Accept: application/json' \
@@ -162,14 +216,25 @@ while true; do
     # --reset: tailscale refuses to run over partial state whose flags differ, with a wall of text.
     # --accept-dns=false: this controller must keep resolving attitude.lighting through the site's
     #   own DNS; a VPN client has no business rewriting it on a customer network.
+    # --timeout: without it `up` waits forever for a control server it cannot reach (0020104,
+    #   2026-09-25). Bounded, a hang becomes a logged, reported failure and a fresh key next pass.
     # The key is an argument, never written to disk: single-use, 15 minutes, no other users.
-    if tailscale up --reset --login-server="$SERVER" --authkey="$KEY" \
-            --hostname="$HOSTNAME_T" --accept-dns=false >>"$LOG" 2>&1; then
+    UP_OUT="$(tailscale up --reset --login-server="$SERVER" --authkey="$KEY" \
+            --hostname="$HOSTNAME_T" --accept-dns=false --timeout="$UP_TIMEOUT" 2>&1)"
+    UP_RC=$?
+    UP_OUT="${UP_OUT//"$KEY"/<key>}"
+    [ -n "$UP_OUT" ] && echo "$UP_OUT" >> "$LOG"
+    if [ "$UP_RC" = 0 ]; then
         tailscale set --ssh >>"$LOG" 2>&1
         say "ENROLLED  $HOSTNAME_T  $(enrolled_ip)"
+        report enrolled 0 "$HOSTNAME_T $(enrolled_ip)"
         exit 0
     fi
 
-    say "tailscale up failed"
+    say "tailscale up failed (exit $UP_RC)"
+    # Probe again: tells "server unreachable from tailscale's side" from "reachable, but tailscale
+    # itself failed". The key text never appears in `up` output, and clean() bounds the rest.
+    probe "$SERVER"
+    report up "$UP_RC" "$(echo "$UP_OUT" | tail -2 | tr '\n' ' ') | probe: ${PROBE_DETAIL:-reachable}"
     wait_and_retry || exit 1
 done
