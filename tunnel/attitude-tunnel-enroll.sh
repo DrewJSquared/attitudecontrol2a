@@ -42,6 +42,9 @@ MAX_PASSES="${ATT_TUNNEL_MAX_PASSES:-0}"      # 0 = forever. Tests only.
 LOGIN_PROBE="${ATT_TUNNEL_LOGIN_SERVER:-https://net.attitude.lighting}"
 UP_TIMEOUT="${ATT_TUNNEL_UP_TIMEOUT:-120s}"
 DAEMON_WAIT="${ATT_TUNNEL_DAEMON_WAIT:-30}"
+HOSTS_FILE="${ATT_TUNNEL_HOSTS:-/etc/hosts}"
+PIN_HOST="${LOGIN_PROBE#*://}"; PIN_HOST="${PIN_HOST%%/*}"
+PIN_MARK="attitude-tunnel-pin"
 
 backoff="$BACKOFF_MIN"
 passes=0
@@ -117,6 +120,60 @@ daemon_facts() {
     echo "state=${st:-none} ver=${ver:-none} disk=${disk:-?} | log: ${jr:-none}"
 }
 
+# ---------------------------------------------------------------------------
+# 2.A.24: the /etc/hosts pin for sites whose DNS tailscaled cannot use.
+#
+# AC-0020104, 2026-09-26: curl on the box resolves and reaches net.attitude.lighting every time,
+# and tailscaled on the same box logs "failed to resolve net.attitude.lighting". curl resolves
+# through glibc; tailscale is a static Go binary with Go's own DNS client, which reads
+# /etc/resolv.conf itself and asks those servers directly - and some site DNS servers mishandle
+# its queries. Go's resolver DOES read /etc/hosts first. So when - and only when - tailscaled has
+# logged that it cannot resolve the tunnel server, pin the address glibc gets into /etc/hosts.
+#
+# One marked line, nothing else in the file touched. Refreshed at every boot from a fresh glibc
+# lookup (the pin removed first, so the lookup really goes to DNS), so a droplet that ever
+# changes address is followed on the next boot; if the lookup fails the old pin is kept.
+# ---------------------------------------------------------------------------
+pinned_ip() { grep "$PIN_MARK" "$HOSTS_FILE" 2>/dev/null | awk '{print $1}' | head -1; }
+
+hosts_without_pin() { grep -v "$PIN_MARK" "$HOSTS_FILE" 2>/dev/null; }
+
+# Write the hosts file in place (same inode and permissions), with or without a pin line.
+write_hosts() {   # write_hosts [ip]
+    local tmp
+    tmp="$(mktemp)" || return 1
+    hosts_without_pin > "$tmp"
+    # Never write back a hosts file that lost its other lines (unreadable, say): localhost is in it.
+    [ -s "$tmp" ] || { rm -f "$tmp"; say "not touching $HOSTS_FILE: could not read it"; return 1; }
+    [ -n "${1:-}" ] && printf '%s\t%s\t# %s (tailscaled cannot use this site'"'"'s DNS)\n' "$1" "$PIN_HOST" "$PIN_MARK" >> "$tmp"
+    cat "$tmp" > "$HOSTS_FILE"; local rc=$?
+    rm -f "$tmp"; return $rc
+}
+
+dns_ipv4() {   # what glibc resolves, with our pin out of the way
+    local old ip
+    old="$(pinned_ip)"
+    [ -n "$old" ] && write_hosts
+    ip="$(getent ahostsv4 "$PIN_HOST" 2>/dev/null | awk 'NR==1{print $1}')"
+    [ -n "$old" ] && write_hosts "${ip:-$old}"
+    echo "$ip"
+}
+
+pin_refresh() {   # every run: follow the DNS if a pin exists
+    local old new
+    old="$(pinned_ip)"; [ -z "$old" ] && return 0
+    new="$(dns_ipv4)"
+    if [ -n "$new" ] && [ "$new" != "$old" ]; then say "hosts pin for $PIN_HOST moved $old -> $new"; fi
+}
+
+pin_add() {   # after tailscaled said it cannot resolve the tunnel server
+    local ip
+    [ -n "$(pinned_ip)" ] && return 0
+    ip="$(dns_ipv4)"
+    if [ -z "$ip" ]; then say "cannot pin $PIN_HOST: glibc does not resolve it either"; return 1; fi
+    write_hosts "$ip" && say "pinned $PIN_HOST to $ip in $HOSTS_FILE - tailscaled could not resolve it (nameservers: $(awk '/^nameserver/{print $2}' /etc/resolv.conf 2>/dev/null | paste -sd, -))"
+}
+
 # Can this box reach the tunnel server at all? Sets PROBE_CODE (curl's exit status) and
 # PROBE_DETAIL. curl's exit status is what separates the causes a site network can have:
 #    6  the name does not resolve        (site DNS filters or cannot see net.attitude.lighting)
@@ -139,6 +196,7 @@ probe() {
 }
 
 say "--- starting ---"
+pin_refresh
 
 # ---------------------------------------------------------------------------
 # Phase 0: tailscale present? Install it if not. Niced: on a controller held at
@@ -279,6 +337,11 @@ while true; do
     say "tailscale health: ${HEALTH:-none reported}"
     FACTS="$(daemon_facts)"
     say "tailscaled: $FACTS"
+    if journalctl -u tailscaled --since '-4min' -o cat --no-pager 2>/dev/null \
+            | grep -q "failed to resolve.*${PIN_HOST//./\\.}"; then
+        pin_add
+    fi
+    [ -n "$(pinned_ip)" ] && FACTS="pin=$(pinned_ip) | $FACTS"
     # `up`'s own words are in the device log; its one known failure text ("timeout waiting for
     # Tailscale service to enter a Running state") told us nothing twice, so it goes last.
     report up "$UP_RC" "health: ${HEALTH:-none} | $FACTS | probe: ${PROBE_DETAIL:-reachable} | up: $(echo "$UP_OUT" | tail -1)"

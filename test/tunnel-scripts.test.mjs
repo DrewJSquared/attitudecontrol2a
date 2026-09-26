@@ -29,7 +29,8 @@ const POSIX = process.platform !== 'win32';
 const SKIP = POSIX ? false : 'needs a POSIX host: executes bash scripts';
 const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'tunnel');
 
-function fakes({ enrolled = false, httpCode = 200, body = '', probeExit = 0, probeMsg = '', upFail = false } = {}) {
+function fakes({ enrolled = false, httpCode = 200, body = '', probeExit = 0, probeMsg = '', upFail = false,
+                 journal = 'control: controlclient paused (waiting for network)', dnsIp = '134.209.67.146', hosts = '127.0.0.1\tlocalhost\n' } = {}) {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tunnel-sh-'));
     const bin = path.join(dir, 'bin');
     fs.mkdirSync(bin);
@@ -55,18 +56,28 @@ printf '%s\\n%s' '${body.replace(/'/g, "'\\''")}' '${httpCode}'
 `);
     w('sleep', '#!/bin/bash\necho "sleep $*" >> "' + calls + '"\n');
     w('systemctl', '#!/bin/bash\necho "systemctl $*" >> "' + calls + '"\n');
-    w('journalctl', '#!/bin/bash\necho "control: controlclient paused (waiting for network)"\necho "magicsock: unrelated chatter"\n');
+    w('journalctl', `#!/bin/bash\necho '${journal}'\necho "magicsock: unrelated chatter"\n`);
+    const hostsFile = path.join(dir, 'hosts');
+    fs.writeFileSync(hostsFile, hosts);
+    // glibc stand-in: /etc/hosts first (as nsswitch 'files dns'), then "DNS" = dnsIp, or nothing.
+    w('getent', `#!/bin/bash
+echo "getent $*" >> "${calls}"
+h=$(grep -w "$2" "${hostsFile}" | awk '{print $1}' | head -1)
+if [ -n "$h" ]; then echo "$h STREAM $2"; exit 0; fi
+[ -n "${dnsIp}" ] && { echo "${dnsIp} STREAM $2"; exit 0; }
+exit 2
+`);
     if (enrolled) fs.writeFileSync(path.join(dir, 'enrolled'), '');
     const idFile = path.join(dir, 'id.json');
     fs.writeFileSync(idFile, '{"device_id":179,"serialnumber":"AC-0020139"}');
-    return { dir, bin, calls, idFile, log: path.join(dir, 'enroll.log') };
+    return { dir, bin, calls, idFile, hostsFile, log: path.join(dir, 'enroll.log') };
 }
 
 function enroll(f, extraEnv = {}) {
     const r = spawnSync('bash', [path.join(ROOT, 'attitude-tunnel-enroll.sh')], {
         env: { ...process.env, PATH: `${f.bin}:${process.env.PATH}`,
             ATT_ID_FILE: f.idFile, ATT_TUNNEL_LOG: f.log, ATT_TUNNEL_STARTUP_WAIT: '2',
-            ATT_TUNNEL_MAX_PASSES: '3', ...extraEnv },
+            ATT_TUNNEL_MAX_PASSES: '3', ATT_TUNNEL_HOSTS: f.hostsFile, ...extraEnv },
         encoding: 'utf8', timeout: 20000,
     });
     const calls = fs.existsSync(f.calls) ? fs.readFileSync(f.calls, 'utf8') : '';
@@ -280,4 +291,59 @@ test('2.A.23: a failed up reports tailscaled state, version, disk and its own lo
     assert.doesNotMatch(rep.detail, /magicsock/, 'only lines about control, the network or errors');
     assert.ok(rep.detail.length <= 400);
     assert.match(r.log, /tailscaled restarted, state NeedsLogin/);
+});
+
+
+// ---- 2.A.24: /etc/hosts pin when tailscaled cannot use the site's DNS ----
+
+const RESOLVE_FAIL = 'Received error: fetch control key: Get "https://net.attitude.lighting/key?v=142": failed to resolve "net.attitude.lighting": no DNS fallback candidates remain';
+const PIN_RE = /^134\.209\.67\.146\tnet\.attitude\.lighting\t# attitude-tunnel-pin/m;
+
+test('2.A.24: tailscaled cannot resolve the tunnel server - pins the glibc address, keeps the rest of hosts', { skip: SKIP }, () => {
+    const f = fakes({ body: GOOD, upFail: true, journal: RESOLVE_FAIL });
+    const r = enroll(f);
+    const hosts = fs.readFileSync(f.hostsFile, 'utf8');
+    assert.match(hosts, /^127\.0\.0\.1\tlocalhost$/m, 'existing lines untouched');
+    assert.match(hosts, PIN_RE);
+    assert.equal(hosts.match(/attitude-tunnel-pin/g).length, 1, 'exactly one pin, however many failures');
+    assert.match(r.log, /pinned net\.attitude\.lighting to 134\.209\.67\.146/);
+    const later = reports(r.calls).filter(x => x.stage === 'up').slice(1);
+    assert.ok(later.length >= 1 && later.every(x => /^health: .*pin=134\.209\.67\.146/.test(x.detail) || /pin=134\.209\.67\.146/.test(x.detail)));
+});
+
+test('2.A.24: any other up failure never touches hosts', { skip: SKIP }, () => {
+    const f = fakes({ body: GOOD, upFail: true });
+    enroll(f);
+    assert.equal(fs.readFileSync(f.hostsFile, 'utf8'), '127.0.0.1\tlocalhost\n');
+});
+
+test('2.A.24: glibc cannot resolve it either - no pin', { skip: SKIP }, () => {
+    const f = fakes({ body: GOOD, upFail: true, journal: RESOLVE_FAIL, dnsIp: '' });
+    const r = enroll(f);
+    assert.doesNotMatch(fs.readFileSync(f.hostsFile, 'utf8'), /attitude-tunnel-pin/);
+    assert.match(r.log, /cannot pin .* glibc does not resolve it either/);
+});
+
+test('2.A.24: every run follows the DNS - a moved droplet updates the pin, even on an enrolled box', { skip: SKIP }, () => {
+    const f = fakes({ enrolled: true, hosts: '127.0.0.1\tlocalhost\n1.2.3.4\tnet.attitude.lighting\t# attitude-tunnel-pin (x)\n' });
+    const r = enroll(f);
+    const hosts = fs.readFileSync(f.hostsFile, 'utf8');
+    assert.match(hosts, PIN_RE, 'the lookup must go to DNS with the old pin out of the way');
+    assert.doesNotMatch(hosts, /1\.2\.3\.4/);
+    assert.match(hosts, /^127\.0\.0\.1\tlocalhost$/m);
+    assert.match(r.log, /moved 1\.2\.3\.4 -> 134\.209\.67\.146/);
+});
+
+test('2.A.24: DNS down at boot - the old pin is kept, not dropped', { skip: SKIP }, () => {
+    const f = fakes({ enrolled: true, dnsIp: '', hosts: '127.0.0.1\tlocalhost\n134.209.67.146\tnet.attitude.lighting\t# attitude-tunnel-pin (x)\n' });
+    enroll(f);
+    assert.match(fs.readFileSync(f.hostsFile, 'utf8'), PIN_RE);
+});
+
+test('2.A.24: no pin present - an ordinary box never runs a lookup or writes hosts', { skip: SKIP }, () => {
+    const f = fakes({ enrolled: true });
+    const before = fs.statSync(f.hostsFile).mtimeMs;
+    const r = enroll(f);
+    assert.doesNotMatch(r.calls, /getent/);
+    assert.equal(fs.statSync(f.hostsFile).mtimeMs, before);
 });
