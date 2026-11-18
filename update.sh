@@ -18,6 +18,15 @@
 # that it is running. 2.A.9 passed v2's check with the lights frozen - see the render health
 # section below. This is the failure v2 could not see and v3 exists to catch.
 #
+# v4, 2026-11-18 (2.A.26): the installed files are FLUSHED TO THE CARD and VERIFIED against the
+# release before the app is restarted. v3 copied the new tree in and restarted with nothing forcing
+# it onto the card; Linux holds newly written data in memory for up to ~35 s, and a box unplugged
+# in that window - a bench power-cycle test, typically - came back with every file the update had
+# ADDED at 0 bytes. The app could not load and never came online again. At least fourteen boxes
+# shipped that way in Oct/Nov 2026 (AC-0020153 is the worked example). Also: an "already current"
+# box whose files no longer match the release is reinstalled instead of skipped, so a damaged
+# install can be repaired by flagging an update.
+#
 # Usage:
 #   ./update.sh              install main
 #   ./update.sh some-branch  install a branch (canary testing)
@@ -178,6 +187,49 @@ log() {
 read_version() {
 	tr -cd '[:alnum:]._+-' < "$1" 2>/dev/null
 }
+
+# --- install-integrity begin (sourced by test/update-durability.test.mjs - keep self-contained) ---
+
+# Print, one per line, every regular file under $1 that is missing from $2 or whose bytes differ.
+# Prints nothing when $2 holds an exact copy of every file in $1. Files that exist only in $2
+# (config.json, the app's own state files) are not considered.
+#
+# cmp, not checksums: it stops at the first differing byte, needs no second pass, and is in
+# diffutils, which is Essential on Debian, so it is on every box.
+tree_mismatches() {
+	local src="$1" dst="$2" rel
+	( cd "$src" && find . -type f -print0 ) | while IFS= read -r -d '' rel; do
+		rel="${rel#./}"
+		if [ ! -f "$dst/$rel" ] || ! cmp -s -- "$src/$rel" "$dst/$rel"; then
+			printf '%s\n' "$rel"
+		fi
+	done
+}
+
+# Force everything written so far onto the card. Returns sync's own status.
+#
+# Without this, a file the update ADDED exists only as a directory entry plus data held in RAM
+# until the kernel's writeback gets to it (~35 s with stock settings). A power cut in that window
+# leaves the name on the card with 0 bytes behind it. Files the update REPLACED survive, because
+# btrfs flushes a file renamed over an existing one - which is why only the new files died.
+flush_to_card() {
+	sync
+}
+
+# Drop clean page cache so the verify that follows reads the files back FROM THE CARD, not from
+# the copy in RAM that the app would also have loaded. Without it the comparison can only prove
+# that rsync copied correctly, which was never the problem. Needs root; every field box has
+# passwordless sudo for the attitude user. Never fatal: prints "card" if the cache was dropped,
+# "memory" if it was not, and the log line says which one the verify actually read.
+drop_clean_cache() {
+	if sudo -n sh -c 'echo 1 > /proc/sys/vm/drop_caches' 2>/dev/null; then
+		echo "card"
+	else
+		echo "memory"
+	fi
+}
+
+# --- install-integrity end ---
 
 # Watch the app across the whole settle window and decide whether it is working.
 #
@@ -408,6 +460,10 @@ write_build_state() {
   "log": "$(json_escape "$tail_lines")"
 }
 EOF
+
+	# The record of what happened is useless if a power cut takes it back. Flush the state file
+	# and the log - cheap, and the box is about to restart or exit either way.
+	sync -- "$BUILD_STATE" "$LOG" 2>/dev/null || sync
 }
 
 
@@ -446,6 +502,9 @@ rollback() {
 		exit 2
 	fi
 	cp -p "$WORK/config.json.keep" "$APP_DIR/config.json" 2>/dev/null
+
+	# Same reason as the install path: a restored tree that only exists in RAM is not restored.
+	flush_to_card || log "WARNING: flush after restore failed"
 
 	pm2 restart "$PM2_APP_NAME" >/dev/null 2>&1 9>&-
 	log "rollback complete - restored from $SNAPSHOT"
@@ -560,11 +619,20 @@ NEW_VERSION="$(read_version "$SRC/VERSION")"
 # snapshots, rsyncs and restarts in order to arrive exactly where it started - and combined
 # with a re-armed flag that became a permanent loop on already-current devices. Set
 # ATT_FORCE=1 to reinstall the same version deliberately.
+#
+# 2.A.26: "same version" no longer means "nothing to do". A box can report the right VERSION and
+# still be broken - the files an earlier update added can be 0 bytes on the card (see v4 above).
+# So compare the installed files against the release first, and reinstall if any differ. This is
+# what lets the server repair a damaged box just by flagging an update.
 if [ -n "$CUR_VERSION" ] && [ "$CUR_VERSION" = "$NEW_VERSION" ] && [ "${ATT_FORCE:-0}" != "1" ]; then
-	log "already on ${CUR_VERSION} - nothing to do"
-	write_build_state "already-current" "already on ${CUR_VERSION}"
-	rm -rf "$WORK"
-	exit 0
+	current_bad="$(tree_mismatches "$SRC" "$APP_DIR")"
+	if [ -z "$current_bad" ]; then
+		log "already on ${CUR_VERSION} - installed files match the release - nothing to do"
+		write_build_state "already-current" "already on ${CUR_VERSION}"
+		rm -rf "$WORK"
+		exit 0
+	fi
+	log "already on ${CUR_VERSION} but $(printf '%s\n' "$current_bad" | wc -l) installed file(s) differ from the release - reinstalling to repair: $(printf '%s\n' "$current_bad" | head -5 | tr '\n' ' ')"
 fi
 
 log "download validated (${ZIP_BYTES} bytes, sha ${SRC_SHA:-unknown}) version ${CUR_VERSION:-unknown} -> ${NEW_VERSION:-unknown}"
@@ -605,6 +673,22 @@ if ! rsync -a "$SRC/" "$APP_DIR/"; then
 	rollback "rsync failed partway through install"
 fi
 log "files installed"
+
+# FLUSH, THEN VERIFY FROM THE CARD, THEN RESTART. (v4)
+#
+# Restarting before the flush is what killed the Oct/Nov 2026 boxes: the new app loaded every file
+# from RAM, passed the health check, and the card never got the files the update had added. The
+# rollback trap is still armed here, so a signal during the flush or verify lands on the snapshot.
+if ! flush_to_card; then
+	rollback "could not flush the installed files to the card"
+fi
+verify_source="$(drop_clean_cache)"
+install_bad="$(tree_mismatches "$SRC" "$APP_DIR")"
+if [ -n "$install_bad" ]; then
+	log "after flush, $(printf '%s\n' "$install_bad" | wc -l) installed file(s) differ from the release (read from $verify_source): $(printf '%s\n' "$install_bad" | head -5 | tr '\n' ' ')"
+	rollback "installed files did not match the release after flushing to the card"
+fi
+log "files flushed to the card and verified against the release (read back from $verify_source)"
 
 # Does the build we just installed write a local status file? Asked of the code that is now
 # running, not of a version number, so that installing an older build or a branch that
