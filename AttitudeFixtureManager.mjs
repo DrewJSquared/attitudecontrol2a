@@ -17,7 +17,33 @@ import configManager from './ConfigManager.mjs';
 import attitudeScheduler from './AttitudeScheduler.mjs';
 import attitudeSACN from './AttitudeSACN2A.mjs';
 import showTableStore, { isDeviceRenderable } from './ShowTableStore.mjs';
-import renderWatchdog from './RenderWatchdog.mjs';
+// The render watchdog is OPTIONAL TO RENDERING. (2.A.26)
+//
+// It was a static import. On boxes where a power cut left RenderWatchdog.mjs at 0 bytes, that one
+// line stopped this module - and with it every fixture - from loading at all. A monitor must never
+// be able to take down the thing it monitors, so it is loaded here with import() and replaced by
+// a stand-in that does nothing if it is missing or empty. The entrypoint loads the same file and
+// reports it as errored by name, so the failure is still visible on the fleet page.
+//
+// NO_WATCHDOG must provide every method this file calls on renderWatchdog;
+// test/update-durability.test.mjs checks that it does.
+const NO_WATCHDOG = Object.freeze({
+	beginFrame() {},
+	expectSegments() {},
+	coverSegments() {},
+	coverWholeFrame() {},
+	noteEngineRun() {},
+	engineFaulted() { return false; },
+	noteZoneFault() {},
+	endFrame() {},
+});
+let renderWatchdog = NO_WATCHDOG;
+try {
+	const watchdogModule = await import('./RenderWatchdog.mjs');
+	if (watchdogModule && watchdogModule.default) renderWatchdog = watchdogModule.default;
+} catch (err) {
+	// reported by the entrypoint, which loads the same file and names the module that failed
+}
 
 // import engine
 import { AttitudeEngine3 } from './AttitudeEngine3.mjs';
