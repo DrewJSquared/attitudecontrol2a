@@ -38,6 +38,22 @@ const LAPTOP_MODE = (process.platform == 'darwin');
 // dropped. 60s matches EMIT_ADDRESS_TTL_MS and is comfortably longer than the observed rate.
 const SENSE_PACKET_TTL_MS = 60000;
 
+// A Sense reports its inputs as a comma-separated string of 0s and 1s. (2.A.27)
+//
+// Two hardware lines are in the field. The original Attitude Sense sends 16 values. The Flair
+// Sense (Mark VII) sends 19: its 15 car-wash inputs and 4 relay inputs. Until 2.A.27 this box
+// accepted 16 only, so every Flair Sense packet was rejected ("Invalid DATA property") and that
+// unit's triggers never fired - first seen on the bench with AC-0020180, 2026-11-20.
+//
+// Ruling (John, 2026-10-05, the same fix made in FlairNode): inputs 1-16 are the same inputs in
+// the same order on both lines. So a 19-value packet is accepted and trimmed to its first 16 -
+// the website configures 16 ports per Sense, and every consumer downstream (scheduler, server
+// relay) expects 16. Inputs 17-19 are ignored here until the website can configure them.
+// Any other count is still refused.
+const SENSE_PORTS_USED = 16;
+const SENSE_ACCEPTED_PORT_COUNTS = [16, 19];
+const SENSE_DATA_PATTERN = /^[01](,[01])*$/;
+
 
 
 
@@ -49,6 +65,28 @@ class AttitudeSenseManager {
 	constructor() {
 		// create an array to hold the most recent packet from each sense
 		this.mostRecentPacketFromEachSense = new Map();
+
+		// Sense IDs already logged as sending more than 16 inputs, so the note appears once per
+		// unit per boot instead of once per packet
+		this.trimmedSenseIds = new Set();
+
+		// FLAIR SENSE SERIAL NUMBERS. (2.A.27)
+		//
+		// A Flair Sense identifies itself by SERIAL ("SENS-87734C2D", derived from its board id),
+		// and its ID field cannot be trusted: the firmware ships with ID "11" written in, and 11 is
+		// a live field Sense. So a packet that carries a SERIAL is never filed under its ID.
+		//
+		//   mostRecentPacketFromEachSense  ID -> packet, for packets WITHOUT a serial (the original
+		//                                  16-input Attitude Sense, matched by ID as it always was)
+		//   mostRecentPacketBySerial       SERIAL -> packet, for packets WITH one
+		//   serialPacketByAnnouncedId      announced ID -> serial packet, used ONLY for a website
+		//                                  Sense record that carries no serial number at all, so a
+		//                                  site whose config has no serials behaves as before
+		this.mostRecentPacketBySerial = new Map();
+		this.serialPacketByAnnouncedId = new Map();
+
+		// serials already logged as not belonging to this location (once per unit per boot)
+		this.unassignedSerialsLogged = new Set();
 
         // Bind the handleNewSenseData function to the current instance
         // this fixes the issues with calling this.validateSenseDataObject() inside handleNewSenseData
@@ -103,6 +141,9 @@ class AttitudeSenseManager {
 			// validate the packet
 			this.validateSenseDataObject(object);
 
+			// a Flair Sense sends 19 inputs; keep 1-16 (see SENSE_ACCEPTED_PORT_COUNTS)
+			object = this.normalizeSenseData(object);
+
     		// if detail log level, log that we just got a status packet
 			if (configManager.checkLogLevel('detail')) {
     			logger.info(`New packet of TYPE=1 from sense ID: ${object.ID} with data ${object.DATA}`);
@@ -110,9 +151,24 @@ class AttitudeSenseManager {
 
     		// console.log(`New packet from sense ID: ${object.ID} with data ${object.DATA}`);
 
-    		// update the map with the most recent packet from each sense
+    		// file the packet by serial if it has one, by ID if it does not (see the constructor).
             // stamp arrival time so a unit that goes quiet can age out (see SENSE_PACKET_TTL_MS)
-            this.mostRecentPacketFromEachSense.set(object.ID, { ...object, receivedAt: Date.now() });
+            const stamped = { ...object, receivedAt: Date.now() };
+            const serial = this.normalizeSerial(object.SERIAL);
+            if (serial) {
+            	this.mostRecentPacketBySerial.set(serial, stamped);
+            	this.serialPacketByAnnouncedId.set(object.ID, stamped);
+            } else {
+            	this.mostRecentPacketFromEachSense.set(object.ID, stamped);
+            }
+
+            // Which website Sense record is this? The server files relayed Sense data by id, so a
+            // Flair Sense announcing a borrowed ID would overwrite that other Sense's status. A
+            // serial packet is relayed under the id of the record whose serial number matches.
+            const relayId = this.relayIdFor(object, serial);
+            if (relayId === null) {
+            	return;   // a serial this location does not own: not used, not relayed (logged once)
+            }
 
             // process the data array from the sense's ports (string to array)
             const processedDataArrray = this.processSensePortData(object.DATA);
@@ -122,7 +178,7 @@ class AttitudeSenseManager {
 				timestamp: new Date().toISOString(),
 				name: object.NAME,
 				type: object.TYPE,
-				id: object.ID,
+				id: relayId,
 				version: object.VERSION,
 				packet_no: object.PACKET_NO,
 				data: processedDataArrray,
@@ -169,10 +225,11 @@ class AttitudeSenseManager {
 			throw new Error("Invalid ID property. It must be an integer.");
 		}
 
-		// Check if DATA property exists and follows the specified format
-		const dataPattern = /^([01],){15}[01]$/;
-		if (typeof obj.DATA !== 'string' || !dataPattern.test(obj.DATA)) {
-			throw new Error("Invalid DATA property. It must be a string of 16 numbers (0 or 1) separated by commas.");
+		// Check if DATA property exists and follows the specified format: 16 values (Attitude
+		// Sense) or 19 values (Flair Sense), each 0 or 1, comma-separated, nothing else
+		if (typeof obj.DATA !== 'string' || !SENSE_DATA_PATTERN.test(obj.DATA)
+			|| !SENSE_ACCEPTED_PORT_COUNTS.includes(obj.DATA.split(',').length)) {
+			throw new Error("Invalid DATA property. It must be a string of 16 or 19 numbers (0 or 1) separated by commas.");
 		}
 
         // Check if NAME property exists and is a string
@@ -198,6 +255,108 @@ class AttitudeSenseManager {
 	processSensePortData(dataString) {
 	    // Split the string by commas and convert each item to an integer
 	    return dataString.split(',').map(Number);
+	}
+
+
+	// normalizeSerial - a usable serial in one canonical form, or null. Uppercase and trimmed so
+	// "sens-87734c2d " matches "SENS-87734C2D". The firmware placeholder ("SENS-00200xx") is not
+	// a real serial; a unit still announcing it is treated as having none.
+	normalizeSerial(value) {
+		if (typeof value !== 'string') return null;
+		const serial = value.trim().toUpperCase();
+		if (serial.length === 0 || serial.endsWith('XX')) return null;
+		return serial;
+	}
+
+
+	// configuredSenses - the website's Sense records for this location
+	configuredSenses() {
+		const senses = configManager.getAttitudeSenses();
+		return Array.isArray(senses) ? senses : [];
+	}
+
+
+	// relayIdFor - the website Sense id this packet's data is reported under, or null to drop it
+	relayIdFor(object, serial) {
+		// no serial: the original Attitude Sense, reported under the ID it announces, as always
+		if (!serial) return object.ID;
+
+		const senses = this.configuredSenses();
+		const match = senses.find(s => this.normalizeSerial(s?.serialnumber) === serial);
+		if (match) return match.id;
+
+		// the server sent no serial numbers at all for this location: nothing to match against,
+		// so fall back to the announced ID - the behaviour before 2.A.27
+		if (!senses.some(s => this.normalizeSerial(s?.serialnumber))) return object.ID;
+
+		// this location's Senses have serials and none is this one: it is some other site's unit,
+		// or one on the bench. Using or relaying it would act on, or overwrite, another Sense.
+		if (!this.unassignedSerialsLogged.has(serial)) {
+			this.unassignedSerialsLogged.add(serial);
+			logger.warn(`Sense ${serial} (announcing ID ${object.ID}) is not assigned to this location - its inputs are ignored and not relayed.`);
+		}
+		return null;
+	}
+
+
+	// freshPacket - the entry in a map if it is younger than the TTL; a stale one is deleted
+	freshPacket(map, key) {
+		const packet = map.get(key);
+		if (packet && typeof packet.receivedAt === 'number' && (Date.now() - packet.receivedAt) < SENSE_PACKET_TTL_MS) {
+			return packet;
+		}
+		if (packet) {
+			map.delete(key);
+			logger.warn(`Sense ${key} has not reported within ${SENSE_PACKET_TTL_MS}ms - treating its ports as inactive.`);
+		}
+		return null;
+	}
+
+
+	// getSensePortData - the current port data for one website Sense record. (2.A.27)
+	// Matches by serial number when the record has one, then by ID for the original 16-input
+	// Sense (whose packets carry no serial). Sixteen zeroes when nothing fresh matches.
+	getSensePortData(attitudeSense) {
+		const configSerial = this.normalizeSerial(attitudeSense?.serialnumber);
+		const intId = parseInt(attitudeSense?.id);
+
+		if (configSerial) {
+			const bySerial = this.freshPacket(this.mostRecentPacketBySerial, configSerial);
+			if (bySerial) return this.processSensePortData(bySerial.DATA);
+		}
+
+		const byId = this.freshPacket(this.mostRecentPacketFromEachSense, intId);
+		if (byId) return this.processSensePortData(byId.DATA);
+
+		// a record with no serial number cannot be matched by serial, so a serial unit announcing
+		// this ID is accepted for it - how every Sense was matched before 2.A.27
+		if (!configSerial) {
+			const byAnnounced = this.freshPacket(this.serialPacketByAnnouncedId, intId);
+			if (byAnnounced) return this.processSensePortData(byAnnounced.DATA);
+		}
+
+		if (configManager.checkLogLevel('detail')) {
+			logger.warn(`getSensePortData: Sense ID ${attitudeSense?.id}${configSerial ? ' / ' + configSerial : ''} couldn't be found!`);
+		}
+		return Array(SENSE_PORTS_USED).fill(0);
+	}
+
+
+	// normalizeSenseData - trim a validated packet to the 16 inputs this box uses. A 16-value
+	// packet comes back unchanged. A 19-value packet (Flair Sense) comes back as a copy with its
+	// first 16 values; the first time each Sense ID does this, it is logged once, not per packet.
+	normalizeSenseData(obj) {
+		const values = obj.DATA.split(',');
+		if (values.length === SENSE_PORTS_USED) {
+			return obj;
+		}
+
+		if (!this.trimmedSenseIds.has(obj.ID)) {
+			this.trimmedSenseIds.add(obj.ID);
+			logger.info(`Sense ID ${obj.ID} sends ${values.length} inputs - using inputs 1-${SENSE_PORTS_USED}, ignoring ${SENSE_PORTS_USED + 1}-${values.length}.`);
+		}
+
+		return { ...obj, DATA: values.slice(0, SENSE_PORTS_USED).join(',') };
 	}
 
 
