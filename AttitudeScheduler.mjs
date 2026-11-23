@@ -415,7 +415,8 @@ class AttitudeScheduler {
     		// iterate over each sense
     		attitudeSenses.forEach(attitudeSense => {
     			// get the most up-to-date port data from the Attitude Sense manager
-    			let sensePortData = attitudeSenseManager.getSensePortDataById(attitudeSense.id);
+    			// matched by serial number for a Flair Sense, by ID for the original Sense (2.A.27)
+    			let sensePortData = attitudeSenseManager.getSensePortData(attitudeSense);
 
     			// console.log(`----- Processing sense ID : ${attitudeSense.id}, port data ${sensePortData} -----`)
 
