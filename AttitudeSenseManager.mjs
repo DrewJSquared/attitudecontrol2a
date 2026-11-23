@@ -54,6 +54,10 @@ const SENSE_PORTS_USED = 16;
 const SENSE_ACCEPTED_PORT_COUNTS = [16, 19];
 const SENSE_DATA_PATTERN = /^[01](,[01])*$/;
 
+// How often a Flair Sense that is not on this location's records is reported to the server so it
+// can be auto-connected (2.A.28). The first sighting is reported at once.
+const UNASSIGNED_REPORT_MS = 10000;
+
 
 
 
@@ -87,6 +91,9 @@ class AttitudeSenseManager {
 
 		// serials already logged as not belonging to this location (once per unit per boot)
 		this.unassignedSerialsLogged = new Set();
+
+		// serial -> when it was last reported to the server while unassigned (see relayDecision)
+		this.unassignedSerialLastReport = new Map();
 
         // Bind the handleNewSenseData function to the current instance
         // this fixes the issues with calling this.validateSenseDataObject() inside handleNewSenseData
@@ -165,10 +172,11 @@ class AttitudeSenseManager {
             // Which website Sense record is this? The server files relayed Sense data by id, so a
             // Flair Sense announcing a borrowed ID would overwrite that other Sense's status. A
             // serial packet is relayed under the id of the record whose serial number matches.
-            const relayId = this.relayIdFor(object, serial);
-            if (relayId === null) {
-            	return;   // a serial this location does not own: not used, not relayed (logged once)
+            const relay = this.relayDecision(object, serial);
+            if (relay === null) {
+            	return;   // an unassigned unit already reported in the last UNASSIGNED_REPORT_MS
             }
+            const relayId = relay.id;
 
             // process the data array from the sense's ports (string to array)
             const processedDataArrray = this.processSensePortData(object.DATA);
@@ -179,6 +187,10 @@ class AttitudeSenseManager {
 				name: object.NAME,
 				type: object.TYPE,
 				id: relayId,
+				// THE SERIAL GOES TO THE SERVER (2.A.28). It is how the server auto-connects a Flair
+				// Sense to the site whose box hears it, and moves it when it is moved - id is null
+				// for a unit not yet on this location's records. Absent for the original Sense.
+				...(serial ? { serial } : {}),
 				version: object.VERSION,
 				packet_no: object.PACKET_NO,
 				data: processedDataArrray,
@@ -276,26 +288,43 @@ class AttitudeSenseManager {
 	}
 
 
-	// relayIdFor - the website Sense id this packet's data is reported under, or null to drop it
-	relayIdFor(object, serial) {
+	// relayDecision - how a packet is reported to the server: { id } or null to send nothing now.
+	//
+	// AUTO-CONNECT (2.A.28). A Flair Sense this location does not have on its records is no longer
+	// dropped: it is reported with its serial and `id: null`, so the server can create its record
+	// here, or move it here if it has left another site (the server holds the rules - it is the only
+	// place that sees which boxes hear which unit). Locally it is still NOT acted on until that record
+	// arrives in this box's config, normally within a few seconds - acting on it first would let a
+	// unit this site does not own drive its overrides.
+	//
+	// Reported at once the first time, then every UNASSIGNED_REPORT_MS: enough for the server to
+	// claim it promptly and to notice when its old site stops hearing it, without a database write
+	// per heartbeat for a unit that belongs to the site next door.
+	relayDecision(object, serial) {
 		// no serial: the original Attitude Sense, reported under the ID it announces, as always
-		if (!serial) return object.ID;
+		if (!serial) return { id: object.ID };
 
 		const senses = this.configuredSenses();
 		const match = senses.find(s => this.normalizeSerial(s?.serialnumber) === serial);
-		if (match) return match.id;
+		if (match) return { id: match.id };
 
-		// the server sent no serial numbers at all for this location: nothing to match against,
-		// so fall back to the announced ID - the behaviour before 2.A.27
-		if (!senses.some(s => this.normalizeSerial(s?.serialnumber))) return object.ID;
+		// Records exist but none carries a serial number: a server that does not send them, so
+		// there is nothing to match against - fall back to the announced ID (the pre-2.A.27
+		// behaviour). An EMPTY list is not this case: a location with no Senses yet is exactly
+		// where a new unit must auto-connect, and the ID a Flair Sense announces (11 on every
+		// unflashed unit) is some other site's live Sense.
+		if (senses.length > 0 && !senses.some(s => this.normalizeSerial(s?.serialnumber))) return { id: object.ID };
 
-		// this location's Senses have serials and none is this one: it is some other site's unit,
-		// or one on the bench. Using or relaying it would act on, or overwrite, another Sense.
+		const now = Date.now();
+		const last = this.unassignedSerialLastReport.get(serial);
+		if (last !== undefined && (now - last) < UNASSIGNED_REPORT_MS) return null;
+		this.unassignedSerialLastReport.set(serial, now);
+
 		if (!this.unassignedSerialsLogged.has(serial)) {
 			this.unassignedSerialsLogged.add(serial);
-			logger.warn(`Sense ${serial} (announcing ID ${object.ID}) is not assigned to this location - its inputs are ignored and not relayed.`);
+			logger.info(`Sense ${serial} (announcing ID ${object.ID}) is not on this location's records yet - reporting it to the server to connect it here. Its inputs are used once its record arrives.`);
 		}
-		return null;
+		return { id: null };
 	}
 
 

@@ -44,6 +44,7 @@ function reset(senses) {
     senseManager.serialPacketByAnnouncedId.clear();
     senseManager.trimmedSenseIds.clear();
     senseManager.unassignedSerialsLogged.clear();
+    senseManager.unassignedSerialLastReport.clear();
     configManager.config = { ...(configManager.config || {}), attitudeSenses: senses, logLevel: 'minimal' };
 }
 
@@ -119,12 +120,45 @@ test('a Flair Sense announcing ID 11 never drives, or overwrites, the live Sense
     assert.equal(live[8] + live[9] + live[10], 0, 'and never sees the Flair Sense inputs 9-11');
 });
 
-test('a Flair Sense this location does not own is ignored and NOT relayed (the bench case)', () => {
-    reset([LIVE_SENSE_11]);   // this box's location has Sense 11 only; the Flair unit is on the bench
+test('a Flair Sense this location does not have is REPORTED with its serial for auto-connect, but not acted on (2.A.28)', () => {
+    reset([LIVE_SENSE_11]);   // this location has Sense 11 only; the Flair unit is new here
     const r = capture(() => senseManager.handleNewSenseData(flair({ ID: 11, DATA: data(19, [1]) })));
-    assert.equal(r.relayed.length, 0, 'relaying it would overwrite live Sense 11 on the server');
-    assert.deepEqual(senseManager.getSensePortData(LIVE_SENSE_11), ZERO16, 'and Sense 11 is not driven by it');
-    assert.equal(r.rejected, false, 'a valid packet from someone else\'s unit is not an error');
+    assert.equal(r.relayed.length, 1, 'the server must hear about it - that is how it gets connected');
+    assert.equal(r.relayed[0].id, null, 'with NO id: the 11 it announces is another site\'s live Sense');
+    assert.equal(r.relayed[0].serial, 'SENS-87734C2D', 'and its serial, which is what the server keys on');
+    assert.deepEqual(senseManager.getSensePortData(LIVE_SENSE_11), ZERO16, 'Sense 11 is not driven by it');
+    assert.deepEqual(senseManager.getSensePortData(FLAIR_RECORD), ZERO16.map((_, i) => i === 0 ? 1 : 0),
+        'once its own record arrives in config, its inputs are used - the packet was kept by serial');
+    assert.equal(r.rejected, false, 'a valid packet is not an error');
+});
+
+test('an unassigned unit is reported at once, then at most every 10 s - not every heartbeat', () => {
+    reset([LIVE_SENSE_11]);
+    const r = capture(() => { for (let i = 0; i < 5; i++) senseManager.handleNewSenseData(flair()); });
+    assert.equal(r.relayed.length, 1, 'five heartbeats in a row: one report');
+    senseManager.unassignedSerialLastReport.set('SENS-87734C2D', Date.now() - 11000);
+    const r2 = capture(() => senseManager.handleNewSenseData(flair()));
+    assert.equal(r2.relayed.length, 1, 'after 10 s it is reported again, so the server can notice a move');
+});
+
+test('a location with NO Senses yet: a new Flair Sense is reported for auto-connect, never as ID 11', () => {
+    reset([]);
+    const r = capture(() => senseManager.handleNewSenseData(flair({ ID: 11 })));
+    assert.equal(r.relayed.length, 1);
+    assert.equal(r.relayed[0].id, null, 'an empty site is where a new unit auto-connects - not a reason to trust its ID');
+    assert.equal(r.relayed[0].serial, 'SENS-87734C2D');
+});
+
+test('a matched Flair Sense is relayed under its record id WITH its serial; the original Sense without one', () => {
+    reset([FLAIR_RECORD, { id: 82, serialnumber: 'SENS-0010072', data: [] }]);
+    const r = capture(() => {
+        senseManager.handleNewSenseData(flair());
+        senseManager.handleNewSenseData(packet({ ID: 82 }));
+    });
+    assert.equal(r.relayed[0].id, 205);
+    assert.equal(r.relayed[0].serial, 'SENS-87734C2D', 'the server uses the serial to keep it following the box that hears it');
+    assert.equal(r.relayed[1].id, 82);
+    assert.equal('serial' in r.relayed[1], false, 'the original Sense sends no serial and none is invented');
 });
 
 test('serials match regardless of case and stray spaces', () => {
